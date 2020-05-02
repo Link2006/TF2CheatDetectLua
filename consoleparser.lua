@@ -48,7 +48,7 @@ function consoleparser.init()
 end 
 
 function consoleparser.getPath() 
-	if gamefolder and  then 
+	if gamefolder then 
 		return gamefolder 
 	else 
 		print("ERROR: ConsoleParser is not initialised!")
