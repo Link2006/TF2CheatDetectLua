@@ -5,6 +5,7 @@
 - Team Fortress 2 
 - Lua 5.3+ (Might work with 5.2?),Please look online for instructions  [Downloads for Win32/Win64](http://luabinaries.sourceforge.net/download.html) 
 - A downloaded zip of these files
+- This assumes fps_max of 180, either change your fps_max to 180 or edit the files' `wait` commands (default 300 means roughly 1 second) 
 
 ### Configuration
 - Extract the files to a folder of your choosing (Do not simply put them in TF2's folder)
