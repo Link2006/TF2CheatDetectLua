@@ -2,7 +2,7 @@
 
 ### Requirements
 
-- Team Fortress 2 
+- Team Fortress 2 with a Premium Account (Gives ability to votekick)
 - Lua 5.3+ (Might work with 5.2?),Please look online for instructions  [Downloads for Win32/Win64](http://luabinaries.sourceforge.net/download.html) 
 - A downloaded zip of these files
 - This assumes fps_max of 180, either change your fps_max to 180 or edit the files' `wait` commands (default 300 means roughly 1 second) 
@@ -21,3 +21,4 @@
 ### Notes
 - Just credit me if you use parts of this code.
 - Any suggestions or questions can be posted as an issue.
+- Should not be considered a cheat as it does not manipulate the game at all; behaves like HLDJ from back in the day
