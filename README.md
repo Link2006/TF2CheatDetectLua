@@ -1,4 +1,4 @@
-# Cheater Detected 0.51 (Public Release, WIP)
+# Cheater Detector 0.51 (Public Release, WIP)
 
 ### Requirements
 
@@ -17,5 +17,6 @@
 ### Usage
 - Wait for a bot and press your bind, it should automaticly call a vote against them, if it doesn't happen then they either didn't clear chat or aren't in your team
 
-### License
+### Notes
 - Just credit me if you use parts of this code.
+- Any suggestions or questions can be posted as an issue.
