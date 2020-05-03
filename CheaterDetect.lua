@@ -11,7 +11,7 @@ local SpamMax = 10  --Only print once every X lines
 --CONSTANTS: 
 --NOTE: These *DO* need to be escaped, they are used as patterns! End results is "("..word..")"
 local knownCheatWords = {"(discord.gg/eyPQd9Q)","(%[VALVE%])","(%[VAC%])","()","(OneTrick)", "(LMAOBOX)"} --ESC character is \e, Invalid except in C/C++?  Cathook only!
-local ScriptVersion = "0.51"
+local ScriptVersion = "0.52"
 
 --VARIABLES: 
 local Cheaters = {} 
@@ -139,11 +139,19 @@ local LUAWAITCYCLES = 0
 while true do --Never stop 
 	local conline = consoleparser.getNextLine()
 	
-	--fuck you i don't need `*DEAD* ` :( 
+	--These 3 string removal should *not* be removed at the start but it works so far, so whatever.
+	
+	--This should fix "*DEAD*(TEAM)" spammers
+	if string.sub(conline,1,13)== "*DEAD*(TEAM) " then 
+		conline = string.sub(conline,14)
+	end 
+	
+	--Removes "*DEAD* " from players, assumes they're dead. 
 	if string.sub(conline,1,7) == "*DEAD* " then
 		conline = string.sub(conline,8)
 	end 
-	--fuck you i don't need `(TEAM) ` :( 
+	
+	--Removes "(TEAM) " from players, catches team chat players 
 	if string.sub(conline,1,7) == "(TEAM) " then
 		conline = string.sub(conline,8)
 	end 
