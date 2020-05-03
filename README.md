@@ -11,7 +11,7 @@
 - Extract the files to a folder of your choosing (Do not simply put them in TF2's folder)
 - On Steam, go to TF2's Properties, Set Launch options and add `-condebug -conclearlog` to your arguments
 - Once this is done, modify `consoleparser.lua` to change the path where TF2 is installed (Important!)
-- Start TF2, Bind a key to `say [Script] Cheat Detector;wait 120;status;wait 120;exec lua_nocheat`  (Saying "cheat" allows us to trigger chat clears if not already done, you can also simply `exec lua_nocheat`)
+- Start TF2, Bind a key to `say [Script] Cheat Detector;wait 120;status;wait 120;exec lua_nocheat`  (Saying "cheat" allows us to trigger chat clears if not already done, you can also simply `status;wait 240;exec lua_nocheat`)
 - Start the script by running `lua CheaterDetect.lua` (where `lua` is your Lua interpreter of choice) 
 - (Optional) enable `developer 1` and set `hud_saytext_time ` to 180, this allows you to more easily identify chat clears.
 
