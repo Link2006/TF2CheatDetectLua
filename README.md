@@ -1,4 +1,4 @@
-# Cheater Detector 0.51 (Public Release, WIP)
+# Cheater Detector (WIP)
 
 ### Requirements
 
