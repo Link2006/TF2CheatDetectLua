@@ -7,6 +7,7 @@
 local debugMode = false  --Debugprints :) 
 local allChat = false --Prints chat messages 
 local SpamMax = 10  --Only print once every X lines
+local CheaterLogEnabled = true 
 
 --CONSTANTS: 
 --NOTE: These *DO* need to be escaped, they are used as patterns! End results is "("..word..")"
@@ -217,7 +218,8 @@ while true do --Never stop
 				--------------------------------------------------------------------------
 				
 				if prevConLine ~= "Setting max routable payload size from 1260 to 1200 for CLIENT" and not string.find(prevConLine,"Server Number: %d+") then
-					print("---\""..tostring(prevConLine).."\"---")
+					--This is disabled for now, doesn't seem that important.
+					--print("---\""..tostring(prevConLine).."\"---")
 				end 
 				NewLineFound = true 
 			end 
@@ -245,9 +247,11 @@ while true do --Never stop
 		if userid and plyname and steamid then
 			for k,chtTbl in pairs(Cheaters) do 
 				if chtTbl['name']==plyname then --We already have a cheater with that name! Log their steamid 
-					local chtFh = io.open("cheaters.log","a+")
-					chtFh:write(plyname.."\n"..steamid.."\n")  --This makes it so https://steamid.io  supports just copypasting my list :) 
-					chtFh:close()
+					if CheaterLogEnabled then 
+						local chtFh = io.open("cheaters.log","a+")
+						chtFh:write(plyname.."\n"..steamid.."\n")  --This makes it so https://steamid.io  supports just copypasting my list :) 
+						chtFh:close()
+					end 
 					local updTime = chtTbl['updtime'] -- When was it last updated? 
 					updateCheater(plyname,steamid)
 					print(string.format("Added <%s> %s to cheater list: %q",userid,steamid,plyname)) --userid,steamid,plyname; Userid is a string as it needs to passed as a string anyways.
