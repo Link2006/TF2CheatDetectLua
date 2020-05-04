@@ -1,5 +1,8 @@
 # Cheater Detector (WIP)
 
+### Contact me:
+Twitter: [@Linkcool2006](https://twitter.com/linkcool2006/)
+
 ### Requirements
 
 - Team Fortress 2 with a Premium Account (Gives ability to votekick)
@@ -7,10 +10,12 @@
 - A downloaded zip of these files
 - This assumes fps_max of 180, either change your fps_max to 180 or edit the files' `wait` commands (default 300 means roughly 1 second) 
 
+
 ### Configuration
 - Extract the files to a folder of your choosing (Do not simply put them in TF2's folder)
 - On Steam, go to TF2's Properties, Set Launch options and add `-condebug -conclearlog` to your arguments
 - Once this is done, modify `consoleparser.lua` to change the path where TF2 is installed (Important!)
+- You can also modify `CheaterDetect.lua` to change a few settings, this includes writing SteamIDs to a file called "cheaters.log" (`CheaterLogEnabled` setting, enabled by default)
 - Start TF2, Bind a key to `say [Script] Cheat Detector;wait 120;status;wait 120;exec lua_nocheat`  (Saying "cheat" allows us to trigger chat clears if not already done, you can also simply `status;wait 240;exec lua_nocheat`)
 - Start the script by running `lua CheaterDetect.lua` (where `lua` is your Lua interpreter of choice) 
 - (Optional) enable `developer 1` and set `hud_saytext_time ` to 180, this allows you to more easily identify chat clears.
