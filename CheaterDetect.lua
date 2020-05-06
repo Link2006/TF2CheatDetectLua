@@ -11,7 +11,7 @@ local CheaterLogEnabled = true
 --CONSTANTS: 
 --NOTE: These *DO* need to be escaped, they are used as patterns! End results is "("..word..")"
 local knownCheatWords = {"(discord.gg/eyPQd9Q)","(%[VALVE%])","(%[VAC%])","(\x1B)","(OneTrick)", "(LMAOBOX)","(\xE2\x80\x8F)"} -- \x1B = Escape (Cathook), \xE2+ = Namestealer bytes
-local ScriptVersion = "0.52"
+local ScriptVersion = "0.53"
 
 --VARIABLES: 
 local Cheaters = {} 
