@@ -1,7 +1,6 @@
 -- This script should only print warnings and status lines
 -- Anything that seems to be a chat message followed by empty lines will be considered a cheater/bot.
 
-
 ----------------------CONFIG----------------------
 --CONFIG: 
 local debugMode = false  --Debugprints :) 
@@ -11,7 +10,7 @@ local CheaterLogEnabled = true
 
 --CONSTANTS: 
 --NOTE: These *DO* need to be escaped, they are used as patterns! End results is "("..word..")"
-local knownCheatWords = {"(discord.gg/eyPQd9Q)","(%[VALVE%])","(%[VAC%])","()","(OneTrick)", "(LMAOBOX)"} --ESC character is \e, Invalid except in C/C++?  Cathook only!
+local knownCheatWords = {"(discord.gg/eyPQd9Q)","(%[VALVE%])","(%[VAC%])","(\x1B)","(OneTrick)", "(LMAOBOX)","(\xE2\x80\x8F)"} -- \x1B = Escape (Cathook), \xE2+ = Namestealer bytes
 local ScriptVersion = "0.52"
 
 --VARIABLES: 
@@ -194,37 +193,35 @@ while true do --Never stop
 		
 	elseif string.gsub(conline,"%s","") == "" then  --New line found in current logs ; Changed so *anything thats just spaces* is seen as new line
 		--Check what the last one was, if it'sa chat message; Cheater!
-		local cheatLine = string.gsub(prevConLine,"*DEAD* ","")
-		if string.find(cheatLine,"[%(TEAM%)]?(.-) :  %s-(.-)") then --If the earlier message was a cheater (even if they were dead)...
-			if updateCheater(prevUser,nil) then --user,steamid; returns true on new cheater, false on updated cheater.
-				--Hey it updated 
-				--print(conline)
-				print(string.format("Found %d Cheaters!\n%s",#Cheaters,prevConLine))
-				
-				--TODO: RunCommand("status") 
-				print("\t->Please run status!")
-				--RunCommand("status","_LUA_STATUS") 
-			end 
-		else 
-			--Else if it's Not a cheater, it might be some TF2 bug? 
-			if not NewLineFound then 
-				
-				--TODO: FIX THIS UP, seems to print a *lot* of my console still, when it doesn't need to.
-				
-				--------------------------------------------------------------------------
-				-- These trip up my anticheat, just block them off.						--
-				--	"Setting max routable payload size from 1260 to 1200 for CLIENT"	--
-				--	"Server Number: %d+"												--
-				--------------------------------------------------------------------------
-				
-				if prevConLine ~= "Setting max routable payload size from 1260 to 1200 for CLIENT" and not string.find(prevConLine,"Server Number: %d+") then
-					--This is disabled for now, doesn't seem that important.
-					--print("---\""..tostring(prevConLine).."\"---")
+		if NewLineFound then 
+			local cheatLine = string.gsub(prevConLine,"*DEAD* ","")
+			if string.find(cheatLine,"[%(TEAM%)]?(.-) :  %s-(.-)") then --If the earlier message was a cheater (even if they were dead)...
+				if updateCheater(prevUser,nil) then --user,steamid; returns true on new cheater, false on updated cheater.
+					--Hey it updated 
+					--print(conline)
+					print(string.format("Found %d Cheaters!\n%s",#Cheaters,prevConLine))
+					
+					--TODO: RunCommand("status") 
+					print("\t->Please run status!")
+					--RunCommand("status","_LUA_STATUS") 
 				end 
-				NewLineFound = true 
 			end 
+			--START OF _LUA_STATUS; USELESS RIGHT NOW, TODO: FIX
+		else --Else if it's Not a cheater, it might be some TF2 bug? 
+			--TODO: FIX THIS UP, seems to print a *lot* of my console still, when it doesn't need to.
+			
+			--------------------------------------------------------------------------
+			-- These trip up my anticheat, just block them off.						--
+			--	"Setting max routable payload size from 1260 to 1200 for CLIENT"	--
+			--	"Server Number: %d+"												--
+			--------------------------------------------------------------------------
+			
+			if prevConLine ~= "Setting max routable payload size from 1260 to 1200 for CLIENT" and not string.find(prevConLine,"Server Number: %d+") then
+				--This is disabled for now, doesn't seem that important.
+				--print("---\""..tostring(prevConLine).."\"---")
+			end 
+			NewLineFound = true 
 		end 
-		--START OF _LUA_STATUS; USELESS RIGHT NOW, TODO: FIX
 	elseif conline == "_LUA_STATUS " then 
 		RunCommand("wait 45","_LUA_WAIT") 
 		LUAWAITCYCLES = 0 
