@@ -8,10 +8,19 @@ local allChat = false --Prints chat messages
 local SpamMax = 10  --Only print once every X lines
 local CheaterLogEnabled = true 
 
+local ChatMessage = "[Bind] Cheat Detector (github.com/Link2006/TF2CheatDetectLua)" --What you want said when pressing the bind; SET TO FALSE/NIL TO MUTE 
+
+local fps_max = 180 --Issues with the script running too fast/too slow? Tweak this !
+--NOTES: ABOUT FPS_MAX!
+--This variable here should be set to what's your average *highest* FPS (vsync or not) 
+--It is used to calculate your wait commands which are relying on a (somewhat) stable frame-rate.
+--Example: You usually hit 180 fps, you would set this to 180 (which should make "wait 180" delay stuff by 1 second.
+
+
 --CONSTANTS: 
 --NOTE: These *DO* need to be escaped, they are used as patterns! End results is "("..word..")"
-local knownCheatWords = {"(discord.gg/eyPQd9Q)","(%[VALVE%])","(%[VAC%])","(\x1B)","(OneTrick)", "(LMAOBOX)","(\xE2\x80\x8F)"} -- \x1B = Escape (Cathook), \xE2+ = Namestealer bytes
-local ScriptVersion = "0.53"
+local knownCheatWords = {"(discord.gg/eyPQd9Q)","(%[VALVE%])","(%[VAC%])","(\x1B)","(OneTrick)", "(LMAOBOX)","(\xE2\x80\x8F)",	"(MYG%)T)"} -- \x1B = Escape (Cathook), \xE2+ = Namestealer bytes
+local ScriptVersion = "0.6"
 
 --VARIABLES: 
 local Cheaters = {} 
@@ -20,14 +29,20 @@ local prevConLine = ""
 local prevCheaterLine = "" 
 local NewLineFound = false 
 local SpamCount = SpamMax --Increment this every newline, will print the first newline.
-
 --TODO: Implementation
 
 -----------DO NOT TOUCH BELOW THIS LINE-----------
 
+
+
+local function WaitSec(seconds)
+	return math.ceil(fps_max * seconds) -- Returns a number of frames to wait from the seconds input (rounded up due to source wait commands requiring integers)
+end 
+
 print(string.format("Cheater Detector %s\n\n",ScriptVersion))--Space this out 
-print("\tPlease use this to activate the script in game:")
-print(string.format("\tbind pgup \"say [Bind] Cheat Detector %s;wait 120;status;wait 120;exec lua_nocheat\"\n",ScriptVersion))
+print("\tPlease bind a key to \"exec lua_nocheat\" to activate the script")
+--Let's use the actual config to do stuff, no need to create a bind
+--print(string.format("\tbind pgup \"say [Bind] Cheat Detector %s;wait %d;status;wait %d;exec lua_nocheat\"\n",ScriptVersion,WaitSec(0.5),WaitSec(0.5)))
 
 --My library to grab source engine console output.
 local consoleparser = require("consoleparser")
@@ -51,10 +66,9 @@ local function RunCommand(cmd,step)
 	end 
 	--This should just *delete* when we get a nil variable.
 	if cmd and step then 
-		luacfg:write(string.format("echo %s;wait 90;%s;exec lua_nocheat",step,cmd)) --run the command *after* we cleared the file!  
-	elseif cmd then 
-		print("UNABLE TO WRITE: MISSING STEP!")
-		luacfg:write('echo "Error: Missing Step."') --?
+		luacfg:write(string.format("echo %s;wait %d;%s;exec lua_nocheat",step,WaitSec(0.5),cmd)) --run the command *after* we cleared the file!  
+	elseif cmd then --Raw command write
+		luacfg:write(cmd) 
 	else
 		luacfg:write('echo "End of Lua_NoCheat"') --?
 	end 
@@ -129,15 +143,27 @@ local function isCheater(str) --accepts a cheater name & messages
 end 
 
 print("Cleaning config file...")
-RunCommand()
-print("Done.")
-
+local function ResetConfig() 
+	RunCommand(string.format("say %s;wait %d;status;wait %d;echo _LUA_STATUS;wait %d;exec lua_nocheat",ChatMessage,WaitSec(0.5),WaitSec(0.5),WaitSec(0.5)))
+end 
+ResetConfig() 
 
 local LUAWAITCYCLES = 0 
 
+print("!!Please use CTRL-C to stop the script, this will allow resetting the config/bind!!\n")
+
 --Main loop
 while true do --Never stop 
-	local conline = consoleparser.getNextLine()
+	local pcallstatus, conline = pcall(consoleparser.getNextLine)
+	if not pcallstatus then
+		if string.sub(conline,-12) == "interrupted!" then 
+			print("Exiting...")
+		else 
+			print("Unexpected error: '"..conline.."'") 
+		end 
+		RunCommand("echo \"Disabled, Please run script!\"")
+		break --Stop the loop.
+	end
 	
 	--These 3 string removal should *not* be removed at the start but it works so far, so whatever.
 	
@@ -223,18 +249,20 @@ while true do --Never stop
 			NewLineFound = true 
 		end 
 	elseif conline == "_LUA_STATUS " then 
-		RunCommand("wait 45","_LUA_WAIT") 
+		RunCommand("wait "..WaitSec(1),"_LUA_WAIT") 
 		LUAWAITCYCLES = 0 
 	elseif conline == "_LUA_WAIT " then 	
 		LUAWAITCYCLES = LUAWAITCYCLES + 1
-		if LUAWAITCYCLES >= 3 then 
-			print("It seems no cheaters were found, aborting..")
+		if LUAWAITCYCLES >= 1 then --Relic from the past: had to make sure to wait properly
+			--print("It seems no cheaters were found, aborting..")
 			RunCommand() --Nothing happened... 
 		end 
 	elseif conline == "_LUA_VOTED "  then --Bug? Tf2 Adds a space at the end.
 		LUAWAITCYCLES = 0 --We got a vote!
 		RunCommand() --Wipes the config file.
 	--END OF _LUA_STATUS; USELESS RIGHT NOW, TODO: FIX
+	elseif conline == "End of Lua_NoCheat " then
+			ResetConfig() --Okay we ran to the end and now we can put the config back
 	else
 		------------------------------------------------------------------------------------------
 		--This is for possible status lines
@@ -271,6 +299,14 @@ while true do --Never stop
 			print("None valid: ",conline)
 		end 
 		]]--
+		
+		
+		--EXPERIMENTAL:  Checks for the remaining lines if it contains any namestealer bytes :) 
+		--if string.find(conline,"\xE2\x80\x8F") then --might update  to isCheater, so known cheaters detected outside chat/status 
+		if isCheater(conline) then --Just scan the whole thing for possible cheat words for now 
+			print(string.format("?>%s",conline))
+		end 
+	
 	end  
 	
 	--store this line, if it's not a newline.
@@ -281,5 +317,6 @@ while true do --Never stop
 	
 end 
 
---Shutdown [unused]
+--Shutdown cleanly
 consoleparser.shutdown()
+print("Shutdown of the script completed, Thank you for using Link2006's Cheater Detector") --End of script :)

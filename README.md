@@ -8,20 +8,27 @@ Twitter: [@Linkcool2006](https://twitter.com/linkcool2006/)
 - Team Fortress 2 with a Premium Account (Gives ability to votekick)
 - Lua 5.3+ (Might work with 5.2?),Please look online for instructions  [Downloads for Win32/Win64](http://luabinaries.sourceforge.net/download.html) 
 - A downloaded zip of these files
-- This assumes fps_max of 180, either change your fps_max to 180 or edit the files' `wait` commands (default 300 means roughly 1 second) 
 
 
 ### Configuration
 - Extract the files to a folder of your choosing (Do not simply put them in TF2's folder)
 - On Steam, go to TF2's Properties, Set Launch options and add `-condebug -conclearlog` to your arguments
 - Once this is done, modify `consoleparser.lua` to change the path where TF2 is installed (Important!)
-- You can also modify `CheaterDetect.lua` to change a few settings, this includes writing SteamIDs to a file called "cheaters.log" (`CheaterLogEnabled` setting, enabled by default)
-- Start TF2, Bind a key to `say [Script] Cheat Detector;wait 120;status;wait 120;exec lua_nocheat`  (Saying "cheat" allows us to trigger chat clears if not already done, you can also simply `status;wait 240;exec lua_nocheat`)
-- Start the script by running `lua CheaterDetect.lua` (where `lua` is your Lua interpreter of choice) 
+- `CheaterDetect.lua` also has quite a few settings to change from their defaults, Look further down for a list.
+- Start TF2, Bind a key to `exec lua_nocheat` 
+- Start the script by running `lua CheaterDetect.lua` (where `lua` is your Lua interpreter of choice), to safely exit the script, please interrupt it (CTRL-C for windows)
 - (Optional) enable `developer 1` and set `hud_saytext_time ` to 180, this allows you to more easily identify chat clears.
 
 ### Usage
 - Wait for a bot and press your bind, it should automaticly call a vote against them, if it doesn't happen then they either didn't clear chat or aren't in your team
+
+### CheaterDetect Configs
+- `CheaterLogEnabled` - This logs caught cheaters 
+- `fps_max` - Your highest possible framerate, used to calculate delays
+- `ChatMessage` - Message said in chat once the bind is pressed, Preferably keeping "Cheat" somewhere in the message to trigger chat clears
+- `debugMode` - Debug mode (prints a lot, not recommended!)
+- `allChat` - Prints *all* chat messages
+- `SpamMax` - Only print X numbers of line 
 
 ### Notes
 - Just credit me if you use parts of this code.
