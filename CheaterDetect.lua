@@ -146,7 +146,7 @@ end
 
 print("Cleaning config file...")
 local function ResetConfig() 
-	RunCommand(string.format("say %s;wait %d;status;wait %d;wait %d;echo _LUA_STATUS;exec lua_nocheat",ChatMessage,WaitSec(0.5),WaitSec(1),WaitSec(1)))
+	RunCommand(string.format("say %s;wait %d;status;wait %d;echo _LUA_STATUS;wait %d;exec lua_nocheat",ChatMessage,WaitSec(0.5),WaitSec(0.5),WaitSec(0.5)))
 end 
 ResetConfig() 
 
