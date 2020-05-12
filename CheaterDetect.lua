@@ -8,6 +8,7 @@ local allChat = false --Prints chat messages
 local SpamMax = 10  --Only print once every X lines
 local CheaterLogEnabled = true 
 local SuspPrint = true --Prints suspicious non-chat lines  (Kills, Connections, etc...)
+local TimeStamp = true -- This allows you to enable/disable the timestamp in console.
 
 local ChatMessage = "[Bind] Cheat Detector (github.com/Link2006/TF2CheatDetectLua)" --What you want said when pressing the bind; SET TO FALSE/NIL TO MUTE 
 
@@ -21,7 +22,7 @@ local fps_max = 180 --Issues with the script running too fast/too slow? Tweak th
 --CONSTANTS: 
 --NOTE: These *DO* need to be escaped, they are used as patterns! End results is "("..word..")"
 local knownCheatWords = {"(discord.gg/eyPQd9Q)","(%[VALVE%])","(%[VAC%])","(\x1B)","(OneTrick)", "(LMAOBOX)","(\xE2\x80\x8F)",	"(MYG%)T)"} -- \x1B = Escape (Cathook), \xE2+ = Namestealer bytes
-local ScriptVersion = "0.61"
+local ScriptVersion = "0.62"
 
 --VARIABLES: 
 local Cheaters = {} 
@@ -35,16 +36,22 @@ local KickCheater = nil
 
 -----------DO NOT TOUCH BELOW THIS LINE-----------
 
-
+local function TimedPrint(str, ...)
+	if TimeStamp then 
+		return print("["..os.date("%H:%M:%S",os.time()).."] "..tostring(str),...)  --This is awful but it works :)
+	else 
+		return print(str,...)
+	end 
+end 
 
 local function WaitSec(seconds)
 	return math.ceil(fps_max * seconds) -- Returns a number of frames to wait from the seconds input (rounded up due to source wait commands requiring integers)
 end 
 
 print(string.format("Cheater Detector %s\n\n",ScriptVersion))--Space this out 
-print("\tPlease bind a key to \"exec lua_nocheat\" to activate the script")
+print("Please bind a key to \"exec lua_nocheat\" to activate the script\n")
 --Let's use the actual config to do stuff, no need to create a bind
---print(string.format("\tbind pgup \"say [Bind] Cheat Detector %s;wait %d;status;wait %d;exec lua_nocheat\"\n",ScriptVersion,WaitSec(0.5),WaitSec(0.5)))
+--TimedPrint(string.format("\tbind pgup \"say [Bind] Cheat Detector %s;wait %d;status;wait %d;exec lua_nocheat\"\n",ScriptVersion,WaitSec(0.5),WaitSec(0.5)))
 
 --My library to grab source engine console output.
 local consoleparser = require("consoleparser")
@@ -63,7 +70,7 @@ local function RunCommand(cmd,step)
 	
 	local luacfg = io.open(tf2path.."cfg\\lua_nocheat.cfg","w")
 	if not luacfg then
-		print("[WARN] Failed to open file!",luacfg)
+		TimedPrint("[WARN] Failed to open file!",luacfg)
 		return false 
 	end 
 	--This should just *delete* when we get a nil variable.
@@ -84,7 +91,7 @@ local function updateCheater(username,steamid)
 	--Clean the database, Possible to have nil accounts.
 	for k,v in pairs(Cheaters) do 
 		if v['name'] == "nil" and v['steamid'] == "nil" then
-			print(string.format("Removing invalid entry #%d...",k))
+			TimedPrint(string.format("Removing invalid entry #%d...",k))
 			table.remove(Cheaters,k)
 		end 
 	end 
@@ -106,7 +113,7 @@ local function updateCheater(username,steamid)
 			if chtTbl['steamid'] ~= "nil" and steamid ~= "nil" then --If that steamid is *somehow* already valid; 
 				--Found what they use at the end of names: https://unicode-table.com/en/200F/ "Right-To-Left Mark"
 				--TODO: Find a way to grab the last *UTF8* character and if it matches this one, warn/flag as Namestealer.
-				print(string.format("WARN: Possible Namestealer!  Cheaters: {name=%q,steamid=%q} ; args: [name=%q,steamid=%q]",chtTbl['name'],chtTbl['steamid'],name,steamid)) --Namestealer? Should never trip as namesteals are adding a 0width character at the end; making it unique still
+				TimedPrint(string.format("WARN: Possible Namestealer!  Cheaters: {name=%q,steamid=%q} ; args: [name=%q,steamid=%q]",chtTbl['name'],chtTbl['steamid'],name,steamid)) --Namestealer? Should never trip as namesteals are adding a 0width character at the end; making it unique still
 			end 
 			Cheaters[k]['steamid'] = steamid --Update the currently known cheater with their new steamid :)
 			Cheaters[k]['updtime']=os.time() --Update time?
@@ -129,7 +136,7 @@ local function isCheater(str) --accepts a cheater name & messages
 	for k,word in pairs(knownCheatWords) do 
 		if string.find(str,".*"..word..".*") then 
 			if debugMode then 
-				print("STRING=",str,"WORD=",word,string.find(str,word)) --Not using string.format as this is just debug stuff
+				TimedPrint("STRING=",str,"WORD=",word,string.find(str,word)) --Not using string.format as this is just debug stuff
 			end 
 			return true 
 		end 
@@ -144,7 +151,7 @@ local function isCheater(str) --accepts a cheater name & messages
 	return false 
 end 
 
-print("Cleaning config file...")
+TimedPrint("Cleaning config file...")
 local function ResetConfig() 
 	RunCommand(string.format("say %s;wait %d;status;wait %d;echo _LUA_STATUS;wait %d;exec lua_nocheat",ChatMessage,WaitSec(0.5),WaitSec(0.5),WaitSec(0.5)))
 end 
@@ -152,16 +159,16 @@ ResetConfig()
 
 local LUAWAITCYCLES = 0 
 
-print("!!Please use CTRL-C to stop the script, this will allow resetting the config/bind!!\n")
+TimedPrint("!!Please use CTRL-C to stop the script, this will allow resetting the config/bind!!\n")
 
 --Main loop
 while true do --Never stop 
 	local pcallstatus, conline = pcall(consoleparser.getNextLine)
 	if not pcallstatus then
 		if string.sub(conline,-12) == "interrupted!" then 
-			print("Exiting...")
+			TimedPrint("Exiting...")
 		else 
-			print("Unexpected error: '"..conline.."'") 
+			TimedPrint("Unexpected error: '"..conline.."'") 
 		end 
 		RunCommand("echo \"Disabled, Please run script!\"")
 		break --Stop the loop.
@@ -188,7 +195,7 @@ while true do --Never stop
 		
 	if chatstart and chatend then 
 		if allChat then 
-			print(conline) --Prints chat anyway
+			TimedPrint(conline) --Prints chat anyway
 		end 
 		
 		prevUser = user --store their name for housekeeping
@@ -197,22 +204,22 @@ while true do --Never stop
 			if not allChat then 
 				if prevCheaterLine ~= conline then --If the current spammed line is not the same as last spam line...
 					prevCheaterLine = conline --Store the new one...
-					print(conline) -- print it 
+					TimedPrint(conline) -- print it 
 					SpamCount = 0 --Reset the counter if it changed.
 				else --If it *still* is the same line 
 					if SpamCount >= SpamMax then --Did we get it SpamMax times again? 
 						prevCheaterLine = conline --Store it just in case...
-						print(conline) --Print it 
+						TimedPrint(conline) --Print it 
 						SpamCount = 0 -- Reset the counter 
 					else --if we didn't, increment by 1...
 						SpamCount = SpamCount + 1
 					end
 				end 
 			else
-				print("!<SUSPECT>!") --Someone in console is known cheater, but doesn't clear chat?
+				TimedPrint("!<SUSPECT>!") --Someone in console is known cheater, but doesn't clear chat?
 			end 
 		elseif isCheater(conline) then 
-			print(string.format("!>%s",conline))
+			TimedPrint(string.format("!>%s",conline))
 		end 
 		
 		--Store this good line and reset the flag;
@@ -226,11 +233,11 @@ while true do --Never stop
 			if string.find(cheatLine,"[%(TEAM%)]?(.-) :  %s-(.-)") then --If the earlier message was a cheater (even if they were dead)...
 				if updateCheater(prevUser,nil) then --user,steamid; returns true on new cheater, false on updated cheater.
 					--Hey it updated 
-					--print(conline)
-					print(string.format("Found %d Cheaters!\n%s",#Cheaters,prevConLine))
+					--TimedPrint(conline)
+					TimedPrint(string.format("Found %d Cheaters!",#Cheaters))
 					
 					--TODO: RunCommand("status") 
-					print("\t->Please run status!")
+					TimedPrint("\t->Please run status!")
 					--RunCommand("status","_LUA_STATUS") 
 				end 
 			end 
@@ -246,34 +253,34 @@ while true do --Never stop
 			
 			if prevConLine ~= "Setting max routable payload size from 1260 to 1200 for CLIENT" and not string.find(prevConLine,"Server Number: %d+") then
 				--This is disabled for now, doesn't seem that important.
-				--print("---\""..tostring(prevConLine).."\"---")
+				--TimedPrint("---\""..tostring(prevConLine).."\"---")
 			end 
 			NewLineFound = true 
 		end 
 	elseif conline == "_LUA_STATUS " then 
-		print("_LUA_STATUS") --DEBUG 
+		TimedPrint("_LUA_STATUS") --DEBUG 
 		RunCommand("wait "..WaitSec(1),"_LUA_WAIT") 
 		LUAWAITCYCLES = 0 
 	elseif conline == "_LUA_WAIT " then 	
-		print("_LUA_WAIT") --DEBUG 
+		TimedPrint("_LUA_WAIT") --DEBUG 
 		LUAWAITCYCLES = LUAWAITCYCLES + 1
 		if LUAWAITCYCLES >= 2 and not KickCheater then --This makes sure that we're able to kick  them within 3 attempts.
-			--print("It seems no cheaters were found, aborting..")
+			--TimedPrint("It seems no cheaters were found, aborting..")
 			RunCommand() --Nothing happened... 
 		else 
 			if KickCheater then 
-				print("Attempting to kick "..KickCheater)
+				TimedPrint("Attempting to kick "..KickCheater)
 				RunCommand(string.format("callvote kick %s cheating",KickCheater),"_LUA_VOTED")  --This would go into a script thing 
 				KickCheater = nil 
 			end 
 		end 
 	elseif conline == "_LUA_VOTED "  then --Bug? Tf2 Adds a space at the end.
-		print("_LUA_VOTED") --DEBUG 
+		TimedPrint("_LUA_VOTED") --DEBUG 
 		LUAWAITCYCLES = 0 --We got a vote!
 		RunCommand() --Wipes the config file.
 	--END OF _LUA_STATUS; USELESS RIGHT NOW, TODO: FIX
 	elseif conline == "End of Lua_NoCheat " then
-		print("_LUA_END") --DEBUG 
+		TimedPrint("_LUA_END") --DEBUG 
 		LUAWAITCYCLES = 0
 		ResetConfig() --Okay we ran to the end and now we can put the config back
 	else
@@ -292,7 +299,7 @@ while true do --Never stop
 					end 
 					local updTime = chtTbl['updtime'] -- When was it last updated? 
 					updateCheater(plyname,steamid)
-					print(string.format("Added <%s> %s to cheater list: %q",userid,steamid,plyname)) --userid,steamid,plyname; Userid is a string as it needs to passed as a string anyways.
+					TimedPrint(string.format("Added <%s> %s to cheater list: %q",userid,steamid,plyname)) --userid,steamid,plyname; Userid is a string as it needs to passed as a string anyways.
 					
 					--TODO: ONLY CALLVOTE A CHEATER ONCE EVERY 15-30 SECONDS
 					KickCheater = userid 
@@ -308,7 +315,7 @@ while true do --Never stop
 		NewLineFound = false 
 		--[[
 		if debugMode then 
-			print("None valid: ",conline)
+			TimedPrint("None valid: ",conline)
 		end 
 		]]--
 		
@@ -317,7 +324,7 @@ while true do --Never stop
 		--if string.find(conline,"\xE2\x80\x8F") then --might update  to isCheater, so known cheaters detected outside chat/status 
 		if SuspPrint then 
 			if isCheater(conline) then --Just scan the whole thing for possible cheat words for now 
-				print(string.format("?>%s",conline))
+				TimedPrint(string.format("?>%s",conline))
 			end 
 		end
 	
@@ -326,11 +333,11 @@ while true do --Never stop
 	--store this line, if it's not a newline.
 	
 	if debugMode then 
-		print(conline)
+		TimedPrint(conline)
 	end 
 	
 end 
 
 --Shutdown cleanly
 consoleparser.shutdown()
-print("Shutdown of the script completed, Thank you for using Link2006's Cheater Detector") --End of script :)
+TimedPrint("Shutdown of the script completed, Thank you for using Link2006's Cheater Detector") --End of script :)

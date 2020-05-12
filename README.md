@@ -29,6 +29,8 @@ Twitter: [@Linkcool2006](https://twitter.com/linkcool2006/)
 - `debugMode` - Debug mode (prints a lot, not recommended!)
 - `allChat` - Prints *all* chat messages
 - `SpamMax` - Only print X numbers of line 
+- `SuspPrint` - Prints suspicious lines of text received from the game 
+- `TimeStamp` - Prints the time before each lines
 
 ### Notes
 - Just credit me if you use parts of this code.
