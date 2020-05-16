@@ -10,7 +10,8 @@ local CheaterLogEnabled = true
 local SuspPrint = true --Prints suspicious non-chat lines  (Kills, Connections, etc...)
 local TimeStamp = true -- This allows you to enable/disable the timestamp in console.
 
-local ChatMessage = "[Bind] Cheat Detector (github.com/Link2006/TF2CheatDetectLua)" --What you want said when pressing the bind; SET TO FALSE/NIL TO MUTE 
+local ChatMessageEnabled = true --Set this to false to stop saying the message in Chat 
+local ChatMessage = "[Bind] Cheat Detector (github.com/Link2006/TF2CheatDetectLua)" --What you want said when pressing the bind;
 
 local fps_max = 180 --Issues with the script running too fast/too slow? Tweak this !
 --NOTES: ABOUT FPS_MAX!
@@ -22,7 +23,7 @@ local fps_max = 180 --Issues with the script running too fast/too slow? Tweak th
 --CONSTANTS: 
 --NOTE: These *DO* need to be escaped, they are used as patterns! End results is "("..word..")"
 local knownCheatWords = {"(discord.gg/eyPQd9Q)","(%[VALVE%])","(%[VAC%])","(\x1B)","(OneTrick)", "(LMAOBOX)","(\xE2\x80\x8F)",	"(MYG%)T)",'(Stallman Bot)'} -- \x1B = Escape (Cathook), \xE2+ = Namestealer bytes
-local ScriptVersion = "0.63"
+local ScriptVersion = "0.64"
 
 --VARIABLES: 
 local Cheaters = {} 
@@ -153,7 +154,11 @@ end
 
 TimedPrint("Cleaning config file...")
 local function ResetConfig() 
-	RunCommand(string.format("say %s;wait %d;status;wait %d;echo _LUA_STATUS;wait %d;exec lua_nocheat",ChatMessage,WaitSec(0.5),WaitSec(0.5),WaitSec(0.5)))
+	if ChatMessageEnabled then 
+		RunCommand(string.format("say %s;wait %d;status;wait %d;echo _LUA_STATUS;wait %d;exec lua_nocheat",ChatMessage,WaitSec(0.5),WaitSec(0.5),WaitSec(0.5)))
+	else
+		RunCommand(string.format("wait %d;status;wait %d;echo _LUA_STATUS;wait %d;exec lua_nocheat",WaitSec(0.5),WaitSec(0.5),WaitSec(0.5)))
+	end 
 end 
 ResetConfig() 
 
