@@ -259,12 +259,12 @@ while true do --Never stop
 		end 
 	elseif conline == "_LUA_STATUS " then 
 		TimedPrint("_LUA_STATUS") --DEBUG 
-		RunCommand("wait "..WaitSec(1),"_LUA_WAIT") 
+		RunCommand("wait "..WaitSec(0.5),"_LUA_WAIT") 
 		LUAWAITCYCLES = 0 
 	elseif conline == "_LUA_WAIT " then 	
 		TimedPrint("_LUA_WAIT") --DEBUG 
 		LUAWAITCYCLES = LUAWAITCYCLES + 1
-		if LUAWAITCYCLES >= 2 and not KickCheater then --This makes sure that we're able to kick  them within 3 attempts.
+		if LUAWAITCYCLES >= 5 and not KickCheater then --This makes sure that we'll be able to kick them, waits a few seconds but executes the cfg a few times as well.
 			--TimedPrint("It seems no cheaters were found, aborting..")
 			RunCommand() --Nothing happened... 
 		else 
