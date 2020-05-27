@@ -19,10 +19,13 @@ function consoleparser.init()
 	
 	--Select the game here, no function :(
 	while not validChoice do 
-		print("Please select the game you want to use:")
+		print("Please select the game you want to use:\n")
+		print("Game","Path")
+		print("----","----")
 		for k,v in pairs(games) do 
 			print(k,v)
 		end 
+		io.write("\nGame: ")
 		selgame = io.read() --Too lazy to implement autoselecting the only choice available
 		if not games[selgame] then 
 			print("-----")

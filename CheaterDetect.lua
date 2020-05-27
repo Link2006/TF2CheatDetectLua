@@ -23,7 +23,7 @@ local fps_max = 180 --Issues with the script running too fast/too slow? Tweak th
 --CONSTANTS: 
 --NOTE: These *DO* need to be escaped, they are used as patterns! End results is "("..word..")"
 local knownCheatWords = {"(discord.gg/eyPQd9Q)","(%[VALVE%])","(%[VAC%])","(\x1B)","(OneTrick)", "(LMAOBOX)","(\xE2\x80\x8F)",	"(MYG%)T)",'(Stallman Bot)'} -- \x1B = Escape (Cathook), \xE2+ = Namestealer bytes
-local ScriptVersion = "0.64"
+local ScriptVersion = "0.65"
 
 --VARIABLES: 
 local Cheaters = {} 
@@ -155,7 +155,7 @@ end
 TimedPrint("Cleaning config file...")
 local function ResetConfig() 
 	if ChatMessageEnabled then 
-		RunCommand(string.format("say %s;wait %d;status;wait %d;echo _LUA_STATUS;wait %d;exec lua_nocheat",ChatMessage,WaitSec(0.5),WaitSec(0.5),WaitSec(0.5)))
+		RunCommand(string.format("say %s;wait %d;status;wait %d;echo _LUA_STATUS;wait %d;exec lua_nocheat",ChatMessage,WaitSec(1.25),WaitSec(0.5),WaitSec(0.5)))
 	else
 		RunCommand(string.format("wait %d;status;wait %d;echo _LUA_STATUS;wait %d;exec lua_nocheat",WaitSec(0.5),WaitSec(0.5),WaitSec(0.5)))
 	end 
