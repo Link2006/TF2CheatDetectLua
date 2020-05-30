@@ -19,11 +19,29 @@ local fps_max = 180 --Issues with the script running too fast/too slow? Tweak th
 --It is used to calculate your wait commands which are relying on a (somewhat) stable frame-rate.
 --Example: You usually hit 180 fps, you would set this to 180 (which should make "wait 180" delay stuff by 1 second.
 
+--BlackList/Whitelist support
+--Anyone with a matching name (without invisible characters/namesteal bytes) will get kicked 
+--Unless their steamIDs is in the whitelist. 
+
+local EnableBlackList = true --This will kick anyone that has a name that matches a word in BlackListedNames
+local BlackListedNames = {"MYG)T","CAN YOU QUACK","raspy","/id/raspy_on_osu"} -- Names to kick when status is received
+local WhiteListSteamIDs = { --USE SteamID3 here to whitelist: 
+	"[U:1:11524751]", --		Link2006 - Author of this script.
+	"[U:1:67033233]", --		raspy - Victim of Impersonation bots.
+	}
+--Default SteamIDs: name - steamid - reason 
+
+--		Link2006 - [0:0:0] - My own steamid, i made this script.
+
+-----DO NOT TOUCH ANYTHING BELOW-----
+-----DO NOT TOUCH ANYTHING BELOW-----
+-----DO NOT TOUCH ANYTHING BELOW-----
+-----DO NOT TOUCH ANYTHING BELOW-----
 
 --CONSTANTS: 
 --NOTE: These *DO* need to be escaped, they are used as patterns! End results is "("..word..")"
 local knownCheatWords = {"(discord.gg/eyPQd9Q)","(%[VALVE%])","(%[VAC%])","(\x1B)","(OneTrick)", "(LMAOBOX)","(\xE2\x80\x8F)",	"(MYG%)T)",'(Stallman Bot)'} -- \x1B = Escape (Cathook), \xE2+ = Namestealer bytes
-local ScriptVersion = "0.65"
+local ScriptVersion = "0.7"
 
 --VARIABLES: 
 local Cheaters = {} 
@@ -43,6 +61,15 @@ local function TimedPrint(str, ...)
 	else 
 		return print(str,...)
 	end 
+end 
+
+local function IsWhitelisted(steamid)
+	for k,WLSteamID in pairs(WhiteListSteamIDs) do 
+		if WLSteamID == steamid then 
+			return true 
+		end 
+	end 
+	return false 
 end 
 
 local function WaitSec(seconds)
@@ -310,7 +337,26 @@ while true do --Never stop
 					KickCheater = userid 
 				end 
 			end 
-		end 
+			
+			--This code kind of sucks, but it'll work for now. 
+			--TODO: Actually use a table of forcekick bots
+			--TODO: Have an option to enable/disable this
+			if EnableBlackList then 
+				local PlyNameFiltered = string.gsub(plyname,"\xE2\x80\x8F","") --Removes namestealing bytes ("CAN YOU QUACK" uses them *a lot*); TODO: Maybe find other 0-width characters
+				local whitelisted = false 
+				for k,BLName in pairs(BlackListedNames) do 
+					if PlyNameFiltered == BLName and not IsWhitelisted(steamid) then --kick anyone with a matching name but *not* whitelisted steamids 
+						--CHECK A WHITELIST FIRST 
+						TimedPrint(string.format("Kicking Bot: <%d> %s",userid,PlyNameFiltered))
+						KickCheater = userid
+						break
+					elseif IsWhitelisted(steamid) then --debug
+						--print(string.format("The user %s with steamid %s is whitelisted!",plyname,steamid))
+					end 
+				end 
+				PlyNameFiltered = nil 
+			end 
+		end
 		--This is how STATUS looks like, Have to find name & steamid
 		--#    709 "[VAC] OneTrick"    [U:1:1086889437]    00:09       83   77 spawning
 		------------------------------------------------------------------------------------------
