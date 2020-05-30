@@ -27,11 +27,8 @@ local EnableBlackList = true --This will kick anyone that has a name that matche
 local BlackListedNames = {"MYG)T","CAN YOU QUACK","raspy","/id/raspy_on_osu"} -- Names to kick when status is received
 local WhiteListSteamIDs = { --USE SteamID3 here to whitelist: 
 	"[U:1:11524751]", --		Link2006 - Author of this script.
-	"[U:1:67033233]", --		raspy - Victim of Impersonation bots.
+	"[U:1:67033233]", --		raspy - Victim of Impersonation bots, create a guide to kick bots
 	}
---Default SteamIDs: name - steamid - reason 
-
---		Link2006 - [0:0:0] - My own steamid, i made this script.
 
 -----DO NOT TOUCH ANYTHING BELOW-----
 -----DO NOT TOUCH ANYTHING BELOW-----
