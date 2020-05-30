@@ -25,7 +25,9 @@ Twitter: [@Linkcool2006](https://twitter.com/linkcool2006/)
 ### CheaterDetect Configs
 - `CheaterLogEnabled` - This logs caught cheaters 
 - `fps_max` - Your highest possible framerate, used to calculate delays
+- `ChatMessageEnabled` - Enables/Disables saying a message in chat when bind is pressed.
 - `ChatMessage` - Message said in chat once the bind is pressed, Preferably keeping "Cheat" somewhere in the message to trigger chat clears
+- `EnableBlackList` - kicks bots based on their names, a whitelist was added to prevent kicking known real players.
 - `debugMode` - Debug mode (prints a lot, not recommended!)
 - `allChat` - Prints *all* chat messages
 - `SpamMax` - Only print X numbers of line 
