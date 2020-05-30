@@ -38,7 +38,7 @@ local WhiteListSteamIDs = { --USE SteamID3 here to whitelist:
 --CONSTANTS: 
 --NOTE: These *DO* need to be escaped, they are used as patterns! End results is "("..word..")"
 local knownCheatWords = {"(discord.gg/eyPQd9Q)","(%[VALVE%])","(%[VAC%])","(\x1B)","(OneTrick)", "(LMAOBOX)","(\xE2\x80\x8F)",	"(MYG%)T)",'(Stallman Bot)'} -- \x1B = Escape (Cathook), \xE2+ = Namestealer bytes
-local ScriptVersion = "0.7"
+local ScriptVersion = "0.71"
 
 --VARIABLES: 
 local Cheaters = {} 
@@ -340,6 +340,7 @@ while true do --Never stop
 			--TODO: Have an option to enable/disable this
 			if EnableBlackList then 
 				local PlyNameFiltered = string.gsub(plyname,"\xE2\x80\x8F","") --Removes namestealing bytes ("CAN YOU QUACK" uses them *a lot*); TODO: Maybe find other 0-width characters
+				PlyNameFiltered = string.gsub(PlyNameFiltered,"^%(%d%)","") --Removes (1) off the start of the myg0t bots, as they get numbered if more than one in a server.
 				local whitelisted = false 
 				for k,BLName in pairs(BlackListedNames) do 
 					if PlyNameFiltered == BLName and not IsWhitelisted(steamid) then --kick anyone with a matching name but *not* whitelisted steamids 
