@@ -5,7 +5,7 @@ Twitter: [@Linkcool2006](https://twitter.com/linkcool2006/)
 
 ### Requirements
 
-- Team Fortress 2 with a Premium Account (Gives ability to votekick)
+- Team Fortress 2 with a Steam account that can votekick (Requirements uncertain, needs more information) 
 - Lua 5.3+ (Might work with 5.2?),Please look online for instructions  [Downloads for Win32/Win64](http://luabinaries.sourceforge.net/download.html) 
 - A downloaded zip of these files
 
