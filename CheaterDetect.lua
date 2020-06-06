@@ -10,7 +10,7 @@ local CheaterLogEnabled = true
 local SuspPrint = true --Prints suspicious non-chat lines  (Kills, Connections, etc...)
 local TimeStamp = true -- This allows you to enable/disable the timestamp in console.
 
-local ChatMessageEnabled = true --Set this to false to stop saying the message in Chat 
+local ChatMessageEnabled = false -- Toggles if we say the message, advertising this script isn't useful anymore.
 local ChatMessage = "[Bind] Cheat Detector (github.com/Link2006/TF2CheatDetectLua)" --What you want said when pressing the bind;
 
 local fps_max = 180 --Issues with the script running too fast/too slow? Tweak this !
@@ -24,10 +24,13 @@ local fps_max = 180 --Issues with the script running too fast/too slow? Tweak th
 --Unless their steamIDs is in the whitelist. 
 
 local EnableBlackList = true --This will kick anyone that has a name that matches a word in BlackListedNames
-local BlackListedNames = {"MYG)T","CAN YOU QUACK","raspy","/id/raspy_on_osu","Rick May Was A Pedo Bot"} -- Names to kick when status is received
+
+
+local BlackListedNames = {"MYG)T","CAN YOU QUACK","raspy","/id/raspy_on_osu","Stallman Bot","Rick May Was A Pedo Bot","[g0tb0t]AntiMuslim","[t0gym]AntiMuslim","engineer gaming","Anti LGBT Bot","Church of G0T"} -- Names to kick when status is received
 local WhiteListSteamIDs = { --USE SteamID3 here to whitelist: 
 	"[U:1:11524751]", --		Link2006 - Author of this script.
 	"[U:1:67033233]", --		raspy - Victim of Impersonation bots, create a guide to kick bots
+	"[U:1:165160780]", --	Some dude that's named "CAN YOU QUACK" but isn't a bot.
 	}
 
 -----DO NOT TOUCH ANYTHING BELOW-----
@@ -37,8 +40,10 @@ local WhiteListSteamIDs = { --USE SteamID3 here to whitelist:
 
 --CONSTANTS: 
 --NOTE: These *DO* need to be escaped, they are used as patterns! End results is "("..word..")"
-local knownCheatWords = {"(discord.gg/eyPQd9Q)","(%[VALVE%])","(%[VAC%])","(\x1B)","(OneTrick)", "(LMAOBOX)","(\xE2\x80\x8F)",	"(MYG%)T)",'(Stallman Bot)','(Rick May Was A Pedo Bot)'} -- \x1B = Escape (Cathook), \xE2+ = Namestealer bytes
-local ScriptVersion = "0.73"
+--SUSPICIOUS BOT, UNKNOWN IF STATIC OR RANDOM.
+--#    288 "Kurasawa"          [U:1:1102437106]    00:22      341    0 active
+local knownCheatWords = {"(discord.gg/eyPQd9Q)","(%[VALVE%])","(%[VAC%])","(\x1B)","(OneTrick)", "(LMAOBOX)","(\xE2\x80\x8F)",	"(MYG%)T)",'(Stallman Bot)','(Rick May Was A Pedo Bot)',"(Anti LGBT Bot)","(%[g0tb0t%]AntiMuslim)","(%[t0gym%]AntiMuslim)","(engineer gaming)","(Church of G0T)","(Kurasawa)"} -- \x1B = Escape (Cathook), \xE2+ = Namestealer bytes
+local ScriptVersion = "0.8"
 
 --VARIABLES: 
 local Cheaters = {} 
@@ -49,6 +54,10 @@ local NewLineFound = false
 local SpamCount = SpamMax --Increment this every newline, will print the first newline.
 local KickCheater = nil
 --TODO: Implementation
+
+local KickTable = {} -- TODO: Implement a way to parse if there's more than 1 bot!
+--TODO: Make this actually hold more information within KickCheater (maybe {plyname,userid,waitforconnect}?)
+local KickWaitName = nil --Holds names of players to wait for, nil if not waiting.
 
 -----------DO NOT TOUCH BELOW THIS LINE-----------
 
@@ -179,9 +188,9 @@ end
 TimedPrint("Cleaning config file...")
 local function ResetConfig() 
 	if ChatMessageEnabled then 
-		RunCommand(string.format("say %s;wait %d;status;wait %d;echo _LUA_STATUS;wait %d;exec lua_nocheat",ChatMessage,WaitSec(1.25),WaitSec(0.5),WaitSec(0.5)))
+		RunCommand(string.format("say %s;echo _LUA_PREPARE;wait %d;status;wait %d;echo _LUA_STATUS;wait %d;exec lua_nocheat",ChatMessage,WaitSec(1.25),WaitSec(0.5),WaitSec(0.5)))
 	else
-		RunCommand(string.format("wait %d;status;wait %d;echo _LUA_STATUS;wait %d;exec lua_nocheat",WaitSec(0.5),WaitSec(0.5),WaitSec(0.5)))
+		RunCommand(string.format("echo _LUA_PREPARE;wait %d;status;wait %d;echo _LUA_STATUS;wait %d;exec lua_nocheat",WaitSec(0.5),WaitSec(0.5),WaitSec(0.5)))
 	end 
 end 
 ResetConfig() 
@@ -286,21 +295,33 @@ while true do --Never stop
 			end 
 			NewLineFound = true 
 		end 
+	elseif conline == "_LUA_PREPARE " then 
+		TimedPrint("_LUA_PREPARE")
+		--Hack to fix a stale variable (manual status) 
+		if KickCheater then TimedPrint("WARN: KickCheater was not nil, was status manually called?",KickCheater) end
+		KickCheater = nil 
 	elseif conline == "_LUA_STATUS " then 
 		TimedPrint("_LUA_STATUS") --DEBUG 
 		RunCommand("wait "..WaitSec(0.5),"_LUA_WAIT") 
 		LUAWAITCYCLES = 0 
-	elseif conline == "_LUA_WAIT " then 	
-		TimedPrint("_LUA_WAIT") --DEBUG 
+	elseif conline == "_LUA_WAIT " then 
+		--TimedPrint("_LUA_WAIT") --DEBUG 
 		LUAWAITCYCLES = LUAWAITCYCLES + 1
-		if LUAWAITCYCLES >= 5 and not KickCheater then --This makes sure that we'll be able to kick them, waits a few seconds but executes the cfg a few times as well.
-			--TimedPrint("It seems no cheaters were found, aborting..")
-			RunCommand() --Nothing happened... 
+		if not KickWaitName then --Are we waiting for a bot...? If so, Wait indefinately...? TODO: Make sure this doesn't always loop 
+			if LUAWAITCYCLES >= 5 and not KickCheater then --This makes sure that we'll be able to kick them, waits a few seconds but executes the cfg a few times as well.
+				--TimedPrint("It seems no cheaters were found, aborting..")
+				RunCommand() --Nothing happened... 
+			else 
+				if KickCheater then 
+					TimedPrint("Attempting to kick "..KickCheater)
+					RunCommand(string.format("callvote kick %s cheating",KickCheater),"_LUA_VOTED")  --This would go into a script thing 
+					KickCheater = nil 
+				end 
+			end 
 		else 
-			if KickCheater then 
-				TimedPrint("Attempting to kick "..KickCheater)
-				RunCommand(string.format("callvote kick %s cheating",KickCheater),"_LUA_VOTED")  --This would go into a script thing 
+			if LUAWAITCYCLES > 99 then 
 				KickCheater = nil 
+				RunCommand()  --We're waiting... but it's been *99* cycles, let's abort? 
 			end 
 		end 
 	elseif conline == "_LUA_VOTED "  then --Bug? Tf2 Adds a space at the end.
@@ -312,13 +333,25 @@ while true do --Never stop
 		TimedPrint("_LUA_END") --DEBUG 
 		LUAWAITCYCLES = 0
 		ResetConfig() --Okay we ran to the end and now we can put the config back
+	elseif KickWaitName and conline == KickWaitName.." connected" then --WE 
+		if KickCheater then 
+			KickWaitName = nil 
+			LUAWAITCYCLES = 0 
+			--We can kick the bot now!!! DO IT!!
+			TimedPrint("Attempting to kick "..KickCheater)
+			RunCommand(string.format("callvote kick %s cheating",KickCheater),"_LUA_VOTED")  --This would go into a script thing 
+			KickCheater = nil 
+		end 
 	else
 		------------------------------------------------------------------------------------------
 		--This is for possible status lines
-		local userid,plyname, steamid = string.match(conline,"#%s+(%d+)%s+\"(.+)\"%s+(%[U:%d:%d+%])")
+		--OLD ONE: "#%s+(%d+)%s+\"(.+)\"%s+(%[U:%d:%d+%])"
 		
-		--TODO: 
+		--
+		local userid,plyname, steamid,plystate = string.match(conline,"#%s+(%d+)%s+\"(.+)\"%s+(%[U:%d:%d+%])%s+%d+:%d+%s+%d+%s+%d+%s+(.+)")
+		
 		if userid and plyname and steamid then
+			--TODO: Make sure that the old KickCheater is not an innocent player (should not be valid)
 			for k,chtTbl in pairs(Cheaters) do 
 				if chtTbl['name']==plyname then --We already have a cheater with that name! Log their steamid 
 					if CheaterLogEnabled then 
@@ -347,6 +380,11 @@ while true do --Never stop
 						--CHECK A WHITELIST FIRST 
 						TimedPrint(string.format("Kicking Bot: <%d> %s",userid,PlyNameFiltered))
 						KickCheater = userid
+						if plystate == "spawning" then 
+							KickWaitName = plyname
+						else 
+							KickWaitName = nil --Don't bother 
+						end 
 						break
 					elseif IsWhitelisted(steamid) then --debug
 						--print(string.format("The user %s with steamid %s is whitelisted!",plyname,steamid))
