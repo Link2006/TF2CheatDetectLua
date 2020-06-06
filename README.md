@@ -3,6 +3,9 @@
 ### Contact me:
 Twitter: [@Linkcool2006](https://twitter.com/linkcool2006/)
 
+### Alternatives: 
+[tf2_bot_detector by PazerOP](https://github.com/PazerOP/tf2_bot_detector)
+
 ### Requirements
 
 - Team Fortress 2 with a Steam account that can votekick (Requirements uncertain, needs more information) 
