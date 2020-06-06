@@ -42,8 +42,8 @@ local WhiteListSteamIDs = { --USE SteamID3 here to whitelist:
 --NOTE: These *DO* need to be escaped, they are used as patterns! End results is "("..word..")"
 --SUSPICIOUS BOT, UNKNOWN IF STATIC OR RANDOM.
 --#    288 "Kurasawa"          [U:1:1102437106]    00:22      341    0 active
-local knownCheatWords = {"(discord.gg/eyPQd9Q)","(%[VALVE%])","(%[VAC%])","(\x1B)","(OneTrick)", "(LMAOBOX)","(\xE2\x80\x8F)",	"(MYG%)T)",'(Stallman Bot)','(Rick May Was A Pedo Bot)',"(Anti LGBT Bot)","(%[g0tb0t%]AntiMuslim)","(%[t0gym%]AntiMuslim)","(engineer gaming)","(Church of G0T)","(Kurasawa)"} -- \x1B = Escape (Cathook), \xE2+ = Namestealer bytes
-local ScriptVersion = "0.8"
+local knownCheatWords = {"(discord.gg/eyPQd9Q)","(%[VALVE%])","(%[VAC%])","(\x1B)","(OneTrick)", "(LMAOBOX)","(\xE2\x80\x8F)",	"(MYG%)T)",'(Stallman Bot)','(Rick May Was A Pedo Bot)',"(Anti LGBT Bot)","(%[g0tb0t%]AntiMuslim)","(%[t0gym%]AntiMuslim)","(engineer gaming)","(Church of G0T)"} -- \x1B = Escape (Cathook), \xE2+ = Namestealer bytes
+local ScriptVersion = "0.81"
 
 --VARIABLES: 
 local Cheaters = {} 
