@@ -1,0 +1,1 @@
+//This file can be used to add accounts you want to automaticly kick (Both Steam3 and SteamID64 supported), this will also contain steamids the script finds.

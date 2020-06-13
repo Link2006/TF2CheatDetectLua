@@ -48,6 +48,9 @@ function consoleparser.init()
 		print("Done.")
 	]]--
 	consoleparser.file = io.input(gamefolder.."console.log")
+	
+	--Okay we need to skip to the end of the file! before starting, 
+	consoleparser.file:seek("end")
 end 
 
 function consoleparser.getPath() 
@@ -66,11 +69,17 @@ function consoleparser.getNextLine()
 	local conline = nil 
 	
 	while not conline do 
-		conline = io.read() --Read the next line in the file 
-		if conline then --if it has a new line, read it 
-			conline:gsub("\r","") --No carriage return (source engine bug??? only tested against echo)
-			conline:gsub("\a","") --Source is weird :)
-			return conline
+		--conline = io.read("*all") --Read the next line in the file 
+		if io.read(0) ~= nil then 
+			conline = io.read("*all") --Read the next chunk of data, I'm using "*all" as this is more reliable against bots; i prefer the occasional hiccups over having broken scripts.
+			if conline then --if it has a new line, read it 
+				--These two does *nothing* lmao oops. 
+				--conline:gsub("\r","\\r") --No carriage return (source engine bug??? only tested against echo)
+				--conline:gsub("\a","\\a") --Source is weird :)
+				--This returns a new line at the very end, remove it as we don't need it.
+				conline = conline:sub(1,-2) --Removes the newline at the very end the bytes 
+				return conline
+			end 
 		end 
 	end 
 	
