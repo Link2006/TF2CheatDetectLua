@@ -491,7 +491,7 @@ while true do --Never stop
 		LUAWAITCYCLES = 0 --We got a vote!
 		RunCommand() --Wipes the config file.
 	elseif string.find(conline,"(End of Lua_NoCheat)%s?") then
-		TimedPrint("Scan completed, no bots/cheaters found.") --DEBUG 
+		TimedPrint("Scan completed.") --DEBUG 
 		LUAWAITCYCLES = 0
 		ResetConfig() --Okay we ran to the end and now we can put the config back
 	--elseif KickWaitName and conline == KickWaitName.." connected" then 
