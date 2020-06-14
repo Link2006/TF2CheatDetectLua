@@ -50,7 +50,7 @@ local BlackListedNames = {} --Names of bots that we should automaticly kick no m
 local BlacklistSteamIDs = {} --SteamIDs of bots that we should kick no matter what (!)
 local DBLastUpdate = 0 --filled later by os.time()
 
-local ScriptVersion = "0.9"
+local ScriptVersion = "0.92"
 
 --VARIABLES: 
 local Cheaters = {} 
@@ -215,8 +215,8 @@ local function AddCheaterToTables(plyname,steamid)
 		end 
 	end 
 	table.insert(BlacklistSteamIDs,steamid) --Add it to the table to ban them too now :)
-	local blacklist_fh = io.open("data/BlackListSteamID.custom.txt")
-	blacklist_fh:write(string.format("//%s\n%s",plyname,steamid))
+	local blacklist_fh = io.open("data/BlackListSteamID.custom.txt","a+")
+	blacklist_fh:write(string.format("\n//%s\n%s",plyname,steamid))
 	blacklist_fh:close()
 	TimedPrint(string.format("Added %s to custom list [%s]",steamid,plyname))
 end 
@@ -470,20 +470,26 @@ while true do --Never stop
 			else 
 				if KickCheater then 
 					TimedPrint("Attempting to kick "..KickCheater)
-					RunCommand(string.format("callvote kick %s cheating",KickCheater),"_LUA_VOTED")  --This would go into a script thing 
+					RunCommand(string.format(((debugMode and "echo") or "").."callvote kick %s cheating",KickCheater),"_LUA_VOTED")  --This would go into a script thing 
 					KickCheater = nil 
 				end 
 			end 
 		else
+			--[[-- We can't actually call a vote if KickWaitName is valid, we need to *wait* :\ 
 			if KickCheater then 
 				TimedPrint("Attempting to kick "..KickCheater)
 				RunCommand(string.format("callvote kick %s cheating",KickCheater),"_LUA_VOTED")  --This would go into a script thing 
 				KickCheater = nil 
 				KickWaitName = nil 
 			end 
-			if LUAWAITCYCLES > 99 then 
+			--]]--
+			if LUAWAITCYCLES >= 100 then --TODO: maybe reduce this and add os.time() comparing (at 15/30 seconds?)
 				KickCheater = nil 
-				RunCommand()  --We're waiting... but it's been *99* cycles, let's abort? 
+				KickWaitName = nil
+				TimedPrint(string.format("%q did not spawn in time, aborting...",KickWaitName))
+				RunCommand()  --We've waited long enough, let's give up.
+				LUAWAITCYCLES = 0 
+				--IDEA: Maybe just restart at _LUA_PREPARE and see if we can catch the bot again?
 			end 
 		end 
 	elseif string.find(conline,"(_LUA_VOTED)%s?")  then --Bug? Tf2 Adds a space at the end.
@@ -495,12 +501,12 @@ while true do --Never stop
 		LUAWAITCYCLES = 0
 		ResetConfig() --Okay we ran to the end and now we can put the config back
 	--elseif KickWaitName and conline == KickWaitName.." connected" then 
-	elseif KickWaitName and string.find(conline,"("..KickWaitName.." connected)%s?") then --Wait until the player is connected.
+	elseif KickWaitName and string.gsub(conline,"( connected)%s?","") == KickWaitName then --Wait until the player is connected.
 		if KickCheater then 
 			LUAWAITCYCLES = 0 
 			--We can kick the bot now!!! DO IT!!
 			TimedPrint("Attempting to kick ["..KickCheater.."] "..KickWaitName)
-			RunCommand(string.format("callvote kick %s cheating",KickCheater),"_LUA_VOTED")  --This would go into a script thing 
+			RunCommand(string.format(((debugMode and "echo") or "").."callvote kick %s cheating",KickCheater),"_LUA_VOTED")  --This would go into a script thing 
 			KickCheater = nil 
 			KickWaitName = nil 
 		end 
@@ -544,9 +550,12 @@ while true do --Never stop
 					PlyNameFiltered = string.gsub(PlyNameFiltered," %d+$","") --Removes numbers at the end of their names 
 					local PlyNameFilteredAlt = string.gsub(PlyNameFiltered,"%s","") --Remove all spaces IN THE ALTERNATE STRING (Should re-check against new bots that adds spaces as well 
 					
+					local FoundBLSteamID = false 
+					
 					for k,BLSteamID in pairs(BlacklistSteamIDs) do 
 						if steamid == BLSteamID then 
-							TimedPrint(string.format("[Banned SteamID] Kicking bot <%d> %s (%s)",userid,steamid,plyname))
+							FoundBLSteamID = true 
+							TimedPrint(string.format("[Banned SteamID] Kicking bot <%d> %s (%s) state=%q",userid,steamid,plyname,plystate))
 							KickCheater = userid --The steamid is blacklisted! KICK IT.
 							if plystate == "spawning" then 
 								KickWaitName = plyname
@@ -557,11 +566,13 @@ while true do --Never stop
 						end 
 					end 
 					
-					if not KickCheater then --It should be added to both the customlist and verify that there's no dupes.
+					--Re-enabled this block because i'd rather have a better list of bots than just kick the banned ones
+					--if not KickCheater then --Disabled this, removed end 
+					if not FoundBLSteamID then --We didn't find them in the SteamID Blacklist, try here
 						for k,BLName in pairs(BlackListedNames) do 
 							if (PlyNameFiltered == BLName or PlyNameFilteredAlt == BLName) and not IsWhitelisted(steamid) then --kick anyone with a matching name but *not* whitelisted steamids 
 								--CHECK A WHITELIST FIRST 
-							TimedPrint(string.format("[Banned Name] Kicking bot <%d> %s (%s)",userid,steamid,plyname))
+							TimedPrint(string.format("[Banned Name] Kicking bot <%d> %s (%s) state=%q",userid,steamid,plyname,plystate))
 								KickCheater = userid
 								if plystate == "spawning" or plystate == "connecting" then --fix spawning/connecting states?
 									KickWaitName = plyname
