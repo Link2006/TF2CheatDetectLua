@@ -1,9 +1,1 @@
 //This file can be used to add accounts you want to automaticly kick (Both Steam3 and SteamID64 supported), this will also contain steamids the script finds.
-//royalhack.net B0T
-76561199065410198
-//MYG)T
-[U:1:1105967288]
-//MYG)T
-[U:1:1106031176]
-//royalhack.net B0T
-[U:1:1105157854]

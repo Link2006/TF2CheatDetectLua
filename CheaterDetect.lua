@@ -50,7 +50,7 @@ local BlackListedNames = {} --Names of bots that we should automaticly kick no m
 local BlacklistSteamIDs = {} --SteamIDs of bots that we should kick no matter what (!)
 local DBLastUpdate = 0 --filled later by os.time()
 
-local ScriptVersion = "0.92"
+local ScriptVersion = "0.93"
 
 --VARIABLES: 
 local Cheaters = {} 
@@ -153,7 +153,7 @@ local function UpdateTables() --Okay this is just stupid
 			local IsDupe = false 
 			for k,blsteamid in pairs(BlacklistSteamIDs) do 
 				if steamid == blsteamid then 
-					TimedPrint(string.format("WARN: Duplicate SteamID %s found at line %d",steamid,line_num_custom))
+					TimedPrint(string.format("WARN: Duplicate SteamID %s found at line %d in custom blacklist",line,line_num_custom))
 					IsDupe = true 
 					break 
 				end 
@@ -165,7 +165,7 @@ local function UpdateTables() --Okay this is just stupid
 			local IsDupe = false 
 			for k,blsteamid in pairs(BlacklistSteamIDs) do 
 				if line == blsteamid then 
-					TimedPrint(string.format("WARN: Duplicate SteamID %s found at line %d",steamid,line_num_custom))
+					TimedPrint(string.format("WARN: Duplicate SteamID %s found at line %d",line,line_num_custom))
 					IsDupe = true 
 					break 
 				end 
@@ -311,11 +311,9 @@ end
 local function isCheater(str) --accepts a cheater name & messages 
 	for k,word in pairs(knownCheatWords) do 
 		if string.find(str,".*"..word..".*") then 
-			--[[--
 			if debugMode then 
 				TimedPrint("STRING=",str,"WORD=",word,string.find(str,word)) --Not using string.format as this is just debug stuff
 			end
-			--]]--
 			return true 
 		end 
 	end 
@@ -453,7 +451,7 @@ while true do --Never stop
 		TimedPrint("Status should be received") --DEBUG 
 		if KickCheater and not KickWaitName then 
 			TimedPrint("Attempting to kick "..KickCheater)
-			RunCommand(string.format(((debugMode and "echo") or "").."callvote kick %s cheating",KickCheater),"_LUA_VOTED") --If debug mode is enabled, don't call actual votekicks
+			RunCommand(string.format(((debugMode and "echo ") or "").."callvote kick %s cheating",KickCheater),"_LUA_VOTED") --If debug mode is enabled, don't call actual votekicks
 			KickCheater = nil 
 			KickWaitName = nil 
 		else 
@@ -470,7 +468,7 @@ while true do --Never stop
 			else 
 				if KickCheater then 
 					TimedPrint("Attempting to kick "..KickCheater)
-					RunCommand(string.format(((debugMode and "echo") or "").."callvote kick %s cheating",KickCheater),"_LUA_VOTED")  --This would go into a script thing 
+					RunCommand(string.format(((debugMode and "echo ") or "").."callvote kick %s cheating",KickCheater),"_LUA_VOTED")  --This would go into a script thing 
 					KickCheater = nil 
 				end 
 			end 
@@ -506,7 +504,7 @@ while true do --Never stop
 			LUAWAITCYCLES = 0 
 			--We can kick the bot now!!! DO IT!!
 			TimedPrint("Attempting to kick ["..KickCheater.."] "..KickWaitName)
-			RunCommand(string.format(((debugMode and "echo") or "").."callvote kick %s cheating",KickCheater),"_LUA_VOTED")  --This would go into a script thing 
+			RunCommand(string.format(((debugMode and "echo ") or "").."callvote kick %s cheating",KickCheater),"_LUA_VOTED")  --This would go into a script thing 
 			KickCheater = nil 
 			KickWaitName = nil 
 		end 
@@ -522,7 +520,12 @@ while true do --Never stop
 				TimedPrint("Invalid status count?")
 			end 
 			]]--
-			
+			if SuspPrint then 
+				if isCheater(statusline) then --Just scan the whole thing for possible cheat words for now; attempt to not have status messages
+					TimedPrint(string.format("!>%s",statusline))
+				end 
+			end
+		
 			if userid and plyname and steamid then
 				--TODO: Make sure that the old KickCheater is not an innocent player (should not be valid)
 				for k,chtTbl in pairs(Cheaters) do 
@@ -607,19 +610,8 @@ while true do --Never stop
 		
 		--EXPERIMENTAL:  Checks for the remaining lines if it contains any namestealer bytes :) 
 		--if string.find(conline,"\xE2\x80\x8F") then --might update  to isCheater, so known cheaters detected outside chat/status 
-		if SuspPrint then 
-			if isCheater(conline) and not string.sub(conline,1,8) == "hostname" then --Just scan the whole thing for possible cheat words for now; attempt to not have status messages
-				TimedPrint(string.format("?>%s",conline))
-				--[[--
-				local TESTME = ""
-				for i=1,string.len(conline) do 
-					TESTME = TESTME..string.format("%s[%X] ",string.sub(conline,i,i),(string.byte(string.sub(conline,i))))
-				end 
-				TimedPrint(TESTME)
-				TESTME = nil
-				--]]--
-			end 
-		end
+		--TODO: Fix this, this does not work anymore.
+		
 	
 	end  
 	
