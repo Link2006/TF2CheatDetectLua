@@ -5,7 +5,7 @@ local games = {
 	 --Please keep the backslashes escaped (\\) and have the last two at the end 
 	 --EXAMPLE C:\\Program Files (x86)\\Steam\\Steamapps\\common\\Team Fortress 2\\tf\\
 	 
-	tf2="Z:\\SteamGames\\steamapps\\common\\Team Fortress 2\\tf\\",
+	tf2="Z:\\SteamGames\\steamapps\\common\\Team Fortress 2/tf/",
 	--csgo="Z:\\SteamGames\\steamapps\\common\\Counter-Strike Global Offensive\\csgo\\"
 }
 local stdinput
@@ -47,7 +47,9 @@ function consoleparser.init()
 		tempfh:close() --lol
 		print("Done.")
 	]]--
-	consoleparser.file = io.input(gamefolder.."console.log")
+	--consoleparser.file = io.input(gamefolder.."console.log")
+	--MAC FIX? 
+	consoleparser.file = io.open(gamefolder.."console.log","r")
 	
 	--Okay we need to skip to the end of the file! before starting, 
 	consoleparser.file:seek("end")
@@ -70,8 +72,8 @@ function consoleparser.getNextLine()
 	
 	while not conline do 
 		--conline = io.read("*all") --Read the next line in the file 
-		if io.read(0) ~= nil then 
-			conline = io.read("*all") --Read the next chunk of data, I'm using "*all" as this is more reliable against bots; i prefer the occasional hiccups over having broken scripts.
+		if consoleparser.file:read(0) ~= nil then 
+			conline = consoleparser.file:read("*all") --Read the next chunk of data, I'm using "*all" as this is more reliable against bots; i prefer the occasional hiccups over having broken scripts.
 			if conline then --if it has a new line, read it 
 				--These two does *nothing* lmao oops. 
 				--conline:gsub("\r","\\r") --No carriage return (source engine bug??? only tested against echo)
@@ -92,7 +94,7 @@ function consoleparser.shutdown()
 		return false --failed 
 	else 
 		io.input(stdinput) --Please restore 
-		io.close(consoleparser.file) --Close 
+		consoleparser.file:close() --Close 
 		consoleparser.file = nil 
 		return true
 	end 
