@@ -15,7 +15,7 @@ end
 
 ----------------------CONFIG----------------------
 --CONFIG: 
-local debugMode = false  --Debug Mode: Disables Votekicks and prints debug messages
+local debugMode = true  --Debug Mode: Disables Votekicks and prints debug messages
 local allChat = false --Prints chat messages 
 local SpamMax = 10  --Only print once every X lines
 local CheaterLogEnabled = true 
@@ -50,7 +50,7 @@ local BlackListedNames = {} --Names of bots that we should automaticly kick no m
 local BlacklistSteamIDs = {} --SteamIDs of bots that we should kick no matter what (!)
 local DBLastUpdate = 0 --filled later by os.time()
 
-local ScriptVersion = "0.93"
+local ScriptVersion = "0.94"
 
 --VARIABLES: 
 local Cheaters = {} 
@@ -244,7 +244,7 @@ local function RunCommand(cmd,step)
 	--step _LUA_STATUS = when we've done status; 
 	--step _LUA_VOTED = when we've done callvote;
 	
-	local luacfg = io.open(tf2path.."cfg\\lua_nocheat.cfg","w")
+	local luacfg = io.open(tf2path.."cfg/lua_nocheat.cfg","w")
 	if not luacfg then
 		TimedPrint("[WARN] Failed to open file!",luacfg)
 		return false 
