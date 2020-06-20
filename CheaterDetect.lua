@@ -15,7 +15,7 @@ end
 
 ----------------------CONFIG----------------------
 --CONFIG: 
-local debugMode = true  --Debug Mode: Disables Votekicks and prints debug messages
+local debugMode = false  --Debug Mode: Disables Votekicks and prints debug messages
 local allChat = false --Prints chat messages 
 local SpamMax = 10  --Only print once every X lines
 local CheaterLogEnabled = true 
