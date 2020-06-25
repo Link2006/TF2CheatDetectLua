@@ -1,1 +1,13 @@
 //This file can be used to add accounts you want to automaticly kick (Both Steam3 and SteamID64 supported), this will also contain steamids the script finds.
+//Last remaining steamid that seems to be unknown? 
+76561198963658118
+//Confederate Sniper
+[U:1:1108291511]
+//Confederate Heavy
+[U:1:1108440696]
+//cum
+[U:1:1108479667]
+//youtu.be/Dk_kIHBaKw0
+76561198168701116
+//pazer
+[U:1:303287455]

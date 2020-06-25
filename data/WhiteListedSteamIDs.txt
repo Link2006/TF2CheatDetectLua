@@ -1,5 +1,14 @@
+//Link2006 - me
 [U:1:11524751]
+//raspy - previously impersonated by bots, creator of guide to kick bots 
 [U:1:67033233]
+//Fake CAN YOU QUACK, Player that just has a banned name.
 [U:1:165160780]
+//pazer - previously impersonated, creator of a tool to kick bots
 [U:1:43645661]
+//Tyler McVicker / VNN - previously mpersonated (once) by bots.
 [U:1:65483548]
+//Some player who think it's funny to impersonate bots.
+[U:1:1010288023]
+//FAKE pazer, thinks it's funny to impersonate bots/other players
+[U:1:303287455]

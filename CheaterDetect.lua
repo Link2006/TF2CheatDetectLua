@@ -50,7 +50,7 @@ local BlackListedNames = {} --Names of bots that we should automaticly kick no m
 local BlacklistSteamIDs = {} --SteamIDs of bots that we should kick no matter what (!)
 local DBLastUpdate = 0 --filled later by os.time()
 
-local ScriptVersion = "0.94"
+local ScriptVersion = "0.96"
 
 --VARIABLES: 
 local Cheaters = {} 
@@ -132,7 +132,9 @@ local function UpdateTables() --Okay this is just stupid
 		table.insert(knownCheatWords,line)
 	end 
 	for line in io.lines("data/WhiteListedSteamIDs.txt") do 
-		table.insert(WhiteListSteamIDs,line) --TODO: SteamID64 support here too! 
+		if Steam3toSteamID64(line) then --I just want to add comments to Whitelisted please ok thx
+			table.insert(WhiteListSteamIDs,line) --TODO: SteamID64 support here too! 
+		end 
 	end 
 	for line in io.lines("data/BlackListedNames.txt") do 
 		SteamID64toSteam3()
@@ -308,17 +310,14 @@ local function updateCheater(username,steamid)
 	return true --End of cheater 
 end 
 
-local function isCheater(str) --accepts a cheater name & messages 
+local function isCheater(InpStr) --accepts a cheater name & messages 
 	for k,word in pairs(knownCheatWords) do 
-		if string.find(str,".*"..word..".*") then 
-			if debugMode then 
-				TimedPrint("STRING=",str,"WORD=",word,string.find(str,word)) --Not using string.format as this is just debug stuff
-			end
+		if InpStr:find(word) then 
 			return true 
 		end 
 	end 
 	
-	for k,chtTbl in pairs(Cheaters) do
+	for k,chtTbl in pairs(Cheaters) do --Wait is this useful anymore? 
 		if chtTbl['name'] == str or chtTbl['steamid'] == str then 
 			--Yes it is a cheater, their Name/SteamID is here :)
 			return true
@@ -503,14 +502,28 @@ while true do --Never stop
 		if KickCheater then 
 			LUAWAITCYCLES = 0 
 			--We can kick the bot now!!! DO IT!!
-			TimedPrint("Attempting to kick ["..KickCheater.."] "..KickWaitName)
+			TimedPrint("A known bot connected: "..KickWaitName.." ["..KickCheater.."] ")
+			--It seems that actually placing this here breaks if the bot connected between the spawning state & _LUA_STATUS
+			--[[
 			RunCommand(string.format(((debugMode and "echo ") or "").."callvote kick %s cheating",KickCheater),"_LUA_VOTED")  --This would go into a script thing 
 			KickCheater = nil 
+			]]--
 			KickWaitName = nil 
 		end 
 	else
-	
+		--Might be possible to just put printing unknown suspicious lines here: 
+		
 		--Parses every line as if they were status lines, if it doesnt work it should fail here. 
+		if not string.gmatch(conline,"[^\n]+") then --There's no newlines here...
+			if not chatstart and not chatend and not user then --It's not a chat message... 
+				if SuspPrint then --Is suspicious printing enabled? 
+					if isCheater(statusline) then --Just scan the whole thing for possible cheat words for now; attempt to not have status messages
+						TimedPrint(string.format("!>%s",statusline)) --print it...
+					end 
+				end
+			end 
+		end 
+		
 		for statusline in string.gmatch(conline,"[^\n]+") do --This is *assuming* the newline is at the end of the line, not inside plyname
 		
 			local userid,plyname, steamid,plystate = string.match(statusline,"#%s+(%d+)%s+\"(.+)\"%s+(%[U:%d:%d+%])%s+%d+:%d+%s+%d+%s+%d+%s+(.+)")
@@ -612,10 +625,7 @@ while true do --Never stop
 		--if string.find(conline,"\xE2\x80\x8F") then --might update  to isCheater, so known cheaters detected outside chat/status 
 		--TODO: Fix this, this does not work anymore.
 		
-	
 	end  
-	
-	--store this line, if it's not a newline.
 	
 	if debugMode then 
 		print("[DEBUG] \""..conline.."\"")
