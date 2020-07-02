@@ -10,38 +10,22 @@ if not socket then
 end 
 --]]--
 
+
+-----------DO NOT TOUCH THIS FILE-----------
+-----------DO NOT TOUCH THIS FILE-----------
+-----------DO NOT TOUCH THIS FILE-----------
+-----------DO NOT TOUCH THIS FILE-----------
+-- I've changed how the configs are stored, they are now in a file config.lua, a default file is available on the github 
+-- Whenever i'll update the scriipt version, this may cause conflicts if the config has not been bumped up
+-----------DO NOT TOUCH THIS FILE-----------
+-----------DO NOT TOUCH THIS FILE-----------
+-----------DO NOT TOUCH THIS FILE-----------
+-----------DO NOT TOUCH THIS FILE-----------
+
+
 -- This script should only print warnings and status lines
 -- Anything that seems to be a chat message followed by empty lines will be considered a cheater/bot.
 
-----------------------CONFIG----------------------
---CONFIG: 
-local debugMode = false  --Debug Mode: Disables Votekicks and prints debug messages
-local allChat = false --Prints chat messages 
-local SpamMax = 10  --Only print once every X lines
-local CheaterLogEnabled = true 
-local SuspPrint = true --Prints suspicious non-chat lines  (Kills, Connections, etc...)
-local CheaterPrint = false --Set to true to print bot talk (Please keep this off)
-local TimeStamp = true -- This allows you to enable/disable the timestamp in console.
-
-local ChatMessageEnabled = false -- Toggles if we say the message, advertising this script isn't useful anymore.
-local ChatMessage = "[Bind] Cheat Detector (github.com/Link2006/TF2CheatDetectLua)" --What you want said when pressing the bind;
-
-local fps_max = 180 --Issues with the script running too fast/too slow? Tweak this !
---NOTES: ABOUT FPS_MAX!
---This variable here should be set to what's your average *highest* FPS (vsync or not) 
---It is used to calculate your wait commands which are relying on a (somewhat) stable frame-rate.
---Example: You usually hit 180 fps, you would set this to 180 (which should make "wait 180" delay stuff by 1 second.
-
---BlackList/Whitelist support
---Anyone with a matching name (without invisible characters/namesteal bytes) will get kicked 
---Unless their steamIDs is in the whitelist. 
-
-local EnableBlackList = true --This will kick anyone that has a name that matches a word in BlackListedNames
-
------DO NOT TOUCH ANYTHING BELOW-----
------DO NOT TOUCH ANYTHING BELOW-----
------DO NOT TOUCH ANYTHING BELOW-----
------DO NOT TOUCH ANYTHING BELOW-----
 
 --CONSTANTS: 
 local knownCheatWords = {} --Patterns that holds text to see as suspicious 
@@ -50,9 +34,36 @@ local BlackListedNames = {} --Names of bots that we should automaticly kick no m
 local BlacklistSteamIDs = {} --SteamIDs of bots that we should kick no matter what (!)
 local DBLastUpdate = 0 --filled later by os.time()
 
-local ScriptVersion = "0.96"
+local ScriptVersion = "1.0"
+
+--CONFIG LOADING CODE GOES HERE...
+print(string.format("Cheater Detector %s\n\n",ScriptVersion))--Space this out 
+print("Please bind a key to \"exec lua_nocheat\" to activate the script\n\n")
+
+print("Loading user settings from config.lua...")
+if loadfile then 
+	local Config = loadfile("config.lua")()  
+	for k,v in pairs(Config) do 
+		_G[k] = v
+	end
+	Config=nil 
+else 
+	print("\n\n!!!FATAL ERROR!!!\n\nloadfile function not found, please contact Link2006 with this information:")
+	print("_VERSION:",_VERSION)
+	print("loadfile:",loadfile)
+	print("load:",load)
+	print("loadstring:",loadstring)
+	print("Press enter to crash out.")
+	io.read()
+	error("Failed to execute usersettings")
+end 
+
+print("Loaded.\n")
 
 --VARIABLES: 
+local BotSteam = nil --stores botid, botname is dangerous to store :| 
+local BotName = nil --Am i supposed to even do this? is this bad?
+
 local Cheaters = {} 
 local prevUser = ""
 local prevConLine = ""
@@ -65,11 +76,6 @@ local KickCheater = nil
 local KickTable = {} -- TODO: Implement a way to parse if there's more than 1 bot!
 --TODO: Make this actually hold more information within KickCheater (maybe {plyname,userid,waitforconnect}?)
 local KickWaitName = nil --Holds names of players to wait for, nil if not waiting.
-
------------DO NOT TOUCH BELOW THIS LINE-----------
------------DO NOT TOUCH BELOW THIS LINE-----------
------------DO NOT TOUCH BELOW THIS LINE-----------
------------DO NOT TOUCH BELOW THIS LINE-----------
 
 local function TimedPrint(str, ...)
 	if TimeStamp then 
@@ -222,14 +228,16 @@ local function AddCheaterToTables(plyname,steamid)
 	blacklist_fh:close()
 	TimedPrint(string.format("Added %s to custom list [%s]",steamid,plyname))
 end 
-print(string.format("Cheater Detector %s\n\n",ScriptVersion))--Space this out 
-print("Please bind a key to \"exec lua_nocheat\" to activate the script\n")
 --Let's use the actual config to do stuff, no need to create a bind
 --TimedPrint(string.format("\tbind pgup \"say [Bind] Cheat Detector %s;wait %d;status;wait %d;exec lua_nocheat\"\n",ScriptVersion,WaitSec(0.5),WaitSec(0.5)))
 
 --My library to grab source engine console output.
 local consoleparser = require("consoleparser")
 consoleparser.init() --Game select + io.input setup.
+
+if ConfigVersion ~= ScriptVersion then 
+	TimedPrint(string.format("!! WARNING !! Config seems out of date, Expected %q but got %q instead.",ScriptVersion,ConfigVersion))
+end 
 
 if debugMode then 
 	TimedPrint("DEBUG MODE ENABLED, Voting is disabled in this mode.")
@@ -240,6 +248,8 @@ local tf2path = consoleparser.getPath() --This returns the path to the tf2 folde
 
 --TODO: getCheater(<something>)  (not needed anymore?)
 --TODO: Probably make it so it writes the current script version inside the 'say bind'? maybe also say if we detected them or not? 
+
+local BotCount = 0 
 
 local function RunCommand(cmd,step)
 		
@@ -253,7 +263,22 @@ local function RunCommand(cmd,step)
 	end 
 	--This should just *delete* when we get a nil variable.
 	if cmd and step then 
-		luacfg:write(string.format("echo %s;wait %d;%s;exec lua_nocheat",step,WaitSec(0.5),cmd)) --run the command *after* we cleared the file!  
+		if step == "_LUA_VOTED" and WarnPlayers then -- I'm lazy so im just adding it here :) 
+			local PreparedWarnMsg = string.gsub(WarnPlayerMsg,"{BotCount}",BotCount)
+			PreparedWarnMsg = (string.gsub(PreparedWarnMsg,"{BotSteam}",(BotSteam or "[U:0:0]")) or PreparedWarnMsg)
+			PreparedWarnMsg = (string.gsub(PreparedWarnMsg,"{BotID}",(KickCheater or "unknown")) or PreparedWarnMsg) 
+			--Planned addition, unknown if functional 
+			local FixedBotName = (((string.gsub(BotName,"\"","''")  or BotName) or (string.gsub(KickWaitName,"\"","''")  or KickWaitName)) or "unknown")
+			PreparedWarnMsg = (string.gsub(PreparedWarnMsg,"{BotName}",FixedBotName) or PreparedWarnMsg)
+			--this should work? 
+			luacfg:write(string.format("say %s;echo %s;wait %d;%s;exec lua_nocheat",PreparedWarnMsg,step,WaitSec(0.5),cmd)) --run the command *after* we cleared the file!  
+			
+			BotSteam = nil --i dont need it anymore
+			BotName = nil 
+			PreparedWarnMsg = nil
+		else 
+			luacfg:write(string.format("echo %s;wait %d;%s;exec lua_nocheat",step,WaitSec(0.5),cmd)) --run the command *after* we cleared the file!  
+		end 
 	elseif cmd then --Raw command write
 		luacfg:write(cmd) 
 	else
@@ -326,7 +351,7 @@ local function isCheater(InpStr) --accepts a cheater name & messages
 	return false 
 end 
 UpdateTables()
-TimedPrint("Cleaning config file...")
+TimedPrint("Cleaning TF2 cfg file...")
 local function ResetConfig() 
 	if ChatMessageEnabled then 
 		RunCommand(string.format("say %s;echo _LUA_PREPARE;wait %d;status;wait %d;echo _LUA_STATUS;wait %d;exec lua_nocheat",ChatMessage,WaitSec(1.25),WaitSec(1.25),WaitSec(1.00)))
@@ -435,6 +460,7 @@ while true do --Never stop
 			NewLineFound = true 
 		end 
 	elseif string.find(conline,"(_LUA_PREPARE)%s?") then 
+		BotCount = 0
 		TimedPrint("Started scan for bots...")
 		--Hack to fix a stale variable (manual status) 
 		if KickCheater then TimedPrint("WARN: KickCheater was not nil, was status manually called?",KickCheater) end
@@ -447,7 +473,7 @@ while true do --Never stop
 		--]]
 	elseif string.find(conline,"(_LUA_STATUS)%s?") then 
 		--We  already got what we need! Skip to kicking 
-		TimedPrint("Status should be received") --DEBUG 
+		TimedPrint(string.format("Status should be received, Found bots: %d",BotCount)) --DEBUG 
 		if KickCheater and not KickWaitName then 
 			TimedPrint("Attempting to kick "..KickCheater)
 			RunCommand(string.format(((debugMode and "echo ") or "").."callvote kick %s cheating",KickCheater),"_LUA_VOTED") --If debug mode is enabled, don't call actual votekicks
@@ -463,7 +489,7 @@ while true do --Never stop
 		if not KickWaitName then --Are we waiting for a bot...? If so, Wait indefinately...? TODO: Make sure this doesn't always loop 
 			if LUAWAITCYCLES >= 5 and not KickCheater then --This makes sure that we'll be able to kick them, waits a few seconds but executes the cfg a few times as well.
 				--TimedPrint("It seems no cheaters were found, aborting..")
-				RunCommand() --Nothing happened... 
+				RunCommand(string.format("say %q",NoBotMsg),"_LUA_END")  --We've waited long enough, let's give up.
 			else 
 				if KickCheater then 
 					TimedPrint("Attempting to kick "..KickCheater)
@@ -480,7 +506,7 @@ while true do --Never stop
 				KickWaitName = nil 
 			end 
 			--]]--
-			if LUAWAITCYCLES >= 100 then --TODO: maybe reduce this and add os.time() comparing (at 15/30 seconds?)
+			if LUAWAITCYCLES >= 20 then --Only loop 20 times, 100 is abusively too long...
 				KickCheater = nil 
 				KickWaitName = nil
 				TimedPrint(string.format("%q did not spawn in time, aborting...",KickWaitName))
@@ -493,6 +519,12 @@ while true do --Never stop
 		TimedPrint("Called a vote, let's hope it passes.") --DEBUG 
 		LUAWAITCYCLES = 0 --We got a vote!
 		RunCommand() --Wipes the config file.
+	elseif string.find(conline,"(_LUA_END)%s?") then 
+		--TODO: Replace stuff that does RunCommand() to RunCommand("say <No bots found>","_LUA_NOBOT")
+		--and put the give up parts here 
+		RunCommand()
+		--if bots = 0 then say (no bot found)
+		--else, just go straight to RunCommand()
 	elseif string.find(conline,"(End of Lua_NoCheat)%s?") then
 		TimedPrint("Scan completed.") --DEBUG 
 		LUAWAITCYCLES = 0
@@ -524,6 +556,18 @@ while true do --Never stop
 			end 
 		end 
 		
+		local conlineback = conline
+		for fixme in string.gmatch(conline,'".-"') do --Catches *all* the names even with empty names, except if they have `"` which breaks :(
+			--I can't gsub apparently lol 
+			
+			local fixmenew = fixme:gsub("\n","\\n") --All new lines were replaced. 
+			fixme = fixme:gsub("[%(%)%.%%%+%-%*%?%[%]%^%$]", "%%%0")
+			conline = conline:gsub(fixme,fixmenew)
+		end 
+		if (conline ~= conlineback) or string.find(conline,"\\n") then --if the text is not the same as the backup, or there's escaped new lines
+			TimedPrint("WARNING: escaped newlines found in fixed text, bots with newlines possible; *BE CAREFUL*")
+		end 
+		conlineback = nil --This is only to warn in console
 		for statusline in string.gmatch(conline,"[^\n]+") do --This is *assuming* the newline is at the end of the line, not inside plyname
 		
 			local userid,plyname, steamid,plystate = string.match(statusline,"#%s+(%d+)%s+\"(.+)\"%s+(%[U:%d:%d+%])%s+%d+:%d+%s+%d+%s+%d+%s+(.+)")
@@ -562,48 +606,59 @@ while true do --Never stop
 				--TODO: Have an option to enable/disable this
 				if EnableBlackList then 
 					local PlyNameFiltered = string.gsub(plyname,"\xE2\x80\x8F","") --Removes namestealing bytes ("CAN YOU QUACK" uses them *a lot*); TODO: Maybe find other 0-width characters
+					local DEBUGNAME = PlyNameFiltered 
 					PlyNameFiltered = string.gsub(PlyNameFiltered,"^%(%d%)","") --Removes (1) off the start of the myg0t bots, as they get numbered if more than one in a server.
-					PlyNameFiltered = string.gsub(PlyNameFiltered," %d+$","") --Removes numbers at the end of their names 
+					if DEBUGNAME == PlyNameFiltered and string.match(DEBUGNAME,"%(%d%).*") then  print("[BUG?]",PlyNameFiltered) end 
+					DEBUGNAME = nil 
+					PlyNameFiltered = string.gsub(PlyNameFiltered," %d+$","") --Removes numbers at the end of their names, kind of stupid fix though
 					local PlyNameFilteredAlt = string.gsub(PlyNameFiltered,"%s","") --Remove all spaces IN THE ALTERNATE STRING (Should re-check against new bots that adds spaces as well 
-					
 					local FoundBLSteamID = false 
 					
-					for k,BLSteamID in pairs(BlacklistSteamIDs) do 
-						if steamid == BLSteamID then 
-							FoundBLSteamID = true 
-							TimedPrint(string.format("[Banned SteamID] Kicking bot <%d> %s (%s) state=%q",userid,steamid,plyname,plystate))
-							KickCheater = userid --The steamid is blacklisted! KICK IT.
-							if plystate == "spawning" then 
-								KickWaitName = plyname
-							else 
-								KickWaitName = nil --Don't bother waiting 
-							end 
-							break --Right, we stop the loop here.
-						end 
-					end 
+					if not KickWaitName then 
 					
-					--Re-enabled this block because i'd rather have a better list of bots than just kick the banned ones
-					--if not KickCheater then --Disabled this, removed end 
-					if not FoundBLSteamID then --We didn't find them in the SteamID Blacklist, try here
-						for k,BLName in pairs(BlackListedNames) do 
-							if (PlyNameFiltered == BLName or PlyNameFilteredAlt == BLName) and not IsWhitelisted(steamid) then --kick anyone with a matching name but *not* whitelisted steamids 
-								--CHECK A WHITELIST FIRST 
-							TimedPrint(string.format("[Banned Name] Kicking bot <%d> %s (%s) state=%q",userid,steamid,plyname,plystate))
-								KickCheater = userid
-								if plystate == "spawning" or plystate == "connecting" then --fix spawning/connecting states?
+						for k,BLSteamID in pairs(BlacklistSteamIDs) do 
+							if steamid == BLSteamID then 
+								FoundBLSteamID = true 
+								BotCount = BotCount + 1
+								TimedPrint(string.format("[Banned SteamID] Kicking bot <%d> %s (%s) state=%q",userid,steamid,plyname,plystate))
+								KickCheater = userid --The steamid is blacklisted! KICK IT.
+								BotSteam = steamid
+								BotName = plyname
+								if plystate == "spawning" or plystate == "connecting" then 
 									KickWaitName = plyname
 								else 
 									KickWaitName = nil --Don't bother waiting 
 								end 
-								AddCheaterToTables(plyname,steamid)
-								break
-							elseif IsWhitelisted(steamid) then --debug
-								--print(string.format("The user %s with steamid %s is whitelisted!",plyname,steamid))
+								break --Right, we stop the loop here.
 							end 
 						end 
-					end 
+						
+						--Re-enabled this block because i'd rather have a better list of bots than just kick the banned ones
+						--if not KickCheater then --Disabled this, removed end 
+						if not FoundBLSteamID then --We didn't find them in the SteamID Blacklist, try here
+							for k,BLName in pairs(BlackListedNames) do 
+								if (PlyNameFiltered == BLName or PlyNameFilteredAlt == BLName) and not IsWhitelisted(steamid) then --kick anyone with a matching name but *not* whitelisted steamids 
+									--CHECK A WHITELIST FIRST 
+									BotCount = BotCount + 1
+									TimedPrint(string.format("[Banned Name] Kicking bot <%d> %s (%s) state=%q",userid,steamid,plyname,plystate))
+									KickCheater = userid
+									BotSteam = steamid
+									BotName = plyname
+									if plystate == "spawning" or plystate == "connecting" then --fix spawning/connecting states?
+										KickWaitName = plyname
+									else 
+										KickWaitName = nil --Don't bother waiting 
+									end 
+									AddCheaterToTables(plyname,steamid)
+									break
+								elseif IsWhitelisted(steamid) then --debug
+									--print(string.format("The user %s with steamid %s is whitelisted!",plyname,steamid))
+								end 
+							end 
+						end 
 					PlyNameFiltered = nil 
 					FoundBLSteamID = nil 
+					end 
 				end 
 			end
 		end 

@@ -12,3 +12,9 @@
 [U:1:1010288023]
 //FAKE pazer, thinks it's funny to impersonate bots/other players
 [U:1:303287455]
+//medic gaming - Supposed human, not bot. Came with "Medic Gaming"
+[U:1:257150875]
+//engineer gaming - Human, not a bot.
+[U:1:1053253343]
+//gaming time - Human, Old name was re-used here.
+[U:1:441791054]
