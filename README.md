@@ -1,4 +1,4 @@
-# Cheater Detector (WIP)
+# Cheater Detector 1.0 (WIP)
 
 ### Contact me:
 Twitter: [@Linkcool2006](https://twitter.com/linkcool2006/)
@@ -14,6 +14,7 @@ Twitter: [@Linkcool2006](https://twitter.com/linkcool2006/)
 
 
 ### Configuration
+- Download the repository (either via `git` cloning or clicking `code` then `download zip`)
 - Extract the files to a folder of your choosing (Do not simply put them in TF2's folder)
 - On Steam, go to TF2's Properties, Set Launch options and add `-condebug -conclearlog` to your arguments
 - Once this is done, modify `consoleparser.lua` to change the path where TF2 is installed (Important!)
@@ -26,16 +27,7 @@ Twitter: [@Linkcool2006](https://twitter.com/linkcool2006/)
 - Wait for a bot and press your bind, it should automaticly call a vote against them, if it doesn't happen then they either didn't clear chat or aren't in your team
 
 ### CheaterDetect Configs
-- `CheaterLogEnabled` - This logs caught cheaters 
-- `fps_max` - Your highest possible framerate, used to calculate delays
-- `ChatMessageEnabled` - Enables/Disables saying a message in chat when bind is pressed.
-- `ChatMessage` - Message said in chat once the bind is pressed, Preferably keeping "Cheat" somewhere in the message to trigger chat clears
-- `EnableBlackList` - kicks bots based on their names, a whitelist was added to prevent kicking known real players.
-- `debugMode` - Debug mode (prints a lot, not recommended!)
-- `allChat` - Prints *all* chat messages
-- `SpamMax` - Only print X numbers of line 
-- `SuspPrint` - Prints suspicious lines of text received from the game 
-- `TimeStamp` - Prints the time before each lines
+- Check out the file config.lua for a list of what settings you can 
 
 ### Notes
 - Just credit me if you use parts of this code.
