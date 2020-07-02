@@ -27,7 +27,7 @@ Twitter: [@Linkcool2006](https://twitter.com/linkcool2006/)
 - Wait for a bot and press your bind, it should automaticly call a vote against them, if it doesn't happen then they either didn't clear chat or aren't in your team
 
 ### CheaterDetect Configs
-- Check out the file config.lua for a list of what settings you can 
+- Check out the file config.lua for a list of what settings you can change
 
 ### Notes
 - Just credit me if you use parts of this code.
