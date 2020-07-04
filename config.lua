@@ -2,7 +2,7 @@
 local Config = Config or {} 
 
 --Configuration settings goes here.
-Config.ConfigVersion = "1.0" --THIS VERSION MUST MATCH THE SCRIPT VERSION, This will warn you otherwise.
+Config.ConfigVersion = "1.01" --THIS VERSION MUST MATCH THE SCRIPT VERSION, This will warn you otherwise.
 
 Config.debugMode = false  --Debug Mode: Disables Votekicks and prints debug messages
 Config.allChat = false --Prints chat messages 

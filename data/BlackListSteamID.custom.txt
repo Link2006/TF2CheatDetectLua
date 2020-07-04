@@ -53,5 +53,3 @@
 [U:1:1109966153]
 //(2)enthusiastic engineer
 [U:1:1108391934]
-//gaming time
-[U:1:441791054]

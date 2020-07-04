@@ -34,7 +34,7 @@ local BlackListedNames = {} --Names of bots that we should automaticly kick no m
 local BlacklistSteamIDs = {} --SteamIDs of bots that we should kick no matter what (!)
 local DBLastUpdate = 0 --filled later by os.time()
 
-local ScriptVersion = "1.0"
+local ScriptVersion = "1.01"
 
 --CONFIG LOADING CODE GOES HERE...
 print(string.format("Cheater Detector %s\n\n",ScriptVersion))--Space this out 
@@ -614,13 +614,12 @@ while true do --Never stop
 					local PlyNameFilteredAlt = string.gsub(PlyNameFiltered,"%s","") --Remove all spaces IN THE ALTERNATE STRING (Should re-check against new bots that adds spaces as well 
 					local FoundBLSteamID = false 
 					
-					if not KickWaitName then 
-					
-						for k,BLSteamID in pairs(BlacklistSteamIDs) do 
-							if steamid == BLSteamID then 
-								FoundBLSteamID = true 
-								BotCount = BotCount + 1
-								TimedPrint(string.format("[Banned SteamID] Kicking bot <%d> %s (%s) state=%q",userid,steamid,plyname,plystate))
+					for k,BLSteamID in pairs(BlacklistSteamIDs) do 
+						if steamid == BLSteamID then 
+							FoundBLSteamID = true 
+							BotCount = BotCount + 1
+							TimedPrint(string.format("[Banned SteamID] Kicking bot <%d> %s (%s) state=%q",userid,steamid,plyname,plystate))
+							if not KickWaitName then 
 								KickCheater = userid --The steamid is blacklisted! KICK IT.
 								BotSteam = steamid
 								BotName = plyname
@@ -629,18 +628,20 @@ while true do --Never stop
 								else 
 									KickWaitName = nil --Don't bother waiting 
 								end 
-								break --Right, we stop the loop here.
 							end 
+							break --Right, we stop the loop here.
 						end 
-						
-						--Re-enabled this block because i'd rather have a better list of bots than just kick the banned ones
-						--if not KickCheater then --Disabled this, removed end 
-						if not FoundBLSteamID then --We didn't find them in the SteamID Blacklist, try here
-							for k,BLName in pairs(BlackListedNames) do 
-								if (PlyNameFiltered == BLName or PlyNameFilteredAlt == BLName) and not IsWhitelisted(steamid) then --kick anyone with a matching name but *not* whitelisted steamids 
-									--CHECK A WHITELIST FIRST 
-									BotCount = BotCount + 1
-									TimedPrint(string.format("[Banned Name] Kicking bot <%d> %s (%s) state=%q",userid,steamid,plyname,plystate))
+					end 
+					
+					--Re-enabled this block because i'd rather have a better list of bots than just kick the banned ones
+					--if not KickCheater then --Disabled this, removed end 
+					if not FoundBLSteamID then --We didn't find them in the SteamID Blacklist, try here
+						for k,BLName in pairs(BlackListedNames) do 
+							if (PlyNameFiltered == BLName or PlyNameFilteredAlt == BLName) and not IsWhitelisted(steamid) then --kick anyone with a matching name but *not* whitelisted steamids 
+								--CHECK A WHITELIST FIRST 
+								BotCount = BotCount + 1
+								TimedPrint(string.format("[Banned Name] Kicking bot <%d> %s (%s) state=%q",userid,steamid,plyname,plystate))
+								if not KickWaitName then 
 									KickCheater = userid
 									BotSteam = steamid
 									BotName = plyname
@@ -649,16 +650,16 @@ while true do --Never stop
 									else 
 										KickWaitName = nil --Don't bother waiting 
 									end 
-									AddCheaterToTables(plyname,steamid)
-									break
-								elseif IsWhitelisted(steamid) then --debug
-									--print(string.format("The user %s with steamid %s is whitelisted!",plyname,steamid))
-								end 
+								end
+								AddCheaterToTables(plyname,steamid)
+								break
+							elseif IsWhitelisted(steamid) then --debug
+								--print(string.format("The user %s with steamid %s is whitelisted!",plyname,steamid))
 							end 
 						end 
+					end 
 					PlyNameFiltered = nil 
 					FoundBLSteamID = nil 
-					end 
 				end 
 			end
 		end 
