@@ -3,12 +3,6 @@
 --TODO: Find a way to optionally use socket to update bot_list, if not found then don't bother updating.
 --			  If we do find socket, ask if we want to update (on launch only), also store at the top of the file //update time; to print that line when we save it as so to print when asking for update
 --			  "Last updated: <date>", do you want to update? [Y/N]
---[[--
-local socket = require('socket')
-if not socket then 
-	print("Unable to load Socket library, will use cached version of bot_list.txt...")
-end 
---]]--
 
 
 -----------DO NOT TOUCH THIS FILE-----------
@@ -23,6 +17,16 @@ end
 -----------DO NOT TOUCH THIS FILE-----------
 
 
+--TODO: Make this **default to disabled**
+--Let's see if we have the socket library to download updates live for the /data/ folder...
+local sockethttp = nil --For now? 
+local socketerr = nil --Not useful unless there's an error 
+local function loadsocket()
+	sockethttp,socketerr = require('socket.http') --assign
+	return sockethttp,socketerr -- if any error
+end 
+--end of function to check for luasockets
+
 -- This script should only print warnings and status lines
 -- Anything that seems to be a chat message followed by empty lines will be considered a cheater/bot.
 
@@ -34,7 +38,7 @@ local BlackListedNames = {} --Names of bots that we should automaticly kick no m
 local BlacklistSteamIDs = {} --SteamIDs of bots that we should kick no matter what (!)
 local DBLastUpdate = 0 --filled later by os.time()
 
-local ScriptVersion = "1.01"
+local ScriptVersion = "1.1"
 
 --CONFIG LOADING CODE GOES HERE...
 print(string.format("Cheater Detector %s\n\n",ScriptVersion))--Space this out 
@@ -42,7 +46,13 @@ print("Please bind a key to \"exec lua_nocheat\" to activate the script\n\n")
 
 print("Loading user settings from config.lua...")
 if loadfile then 
-	local Config = loadfile("config.lua")()  
+	local ConfFunc, Err = loadfile("config.lua")
+	if not ConfFunc then 
+		print("Failed to load config: ",Err)
+		error("Restarting...")
+	end 
+	local Config = ConfFunc() 
+	ConfFunc = nil --delete the function
 	for k,v in pairs(Config) do 
 		_G[k] = v
 	end
@@ -57,8 +67,35 @@ else
 	io.read()
 	error("Failed to execute usersettings")
 end 
-
-print("Loaded.\n")
+if NetworkEnabled then
+	print("Network Enabled, Loading LuaSocket...")
+	if not pcall(loadsocket) then 
+		print("Unable to find luasocket library, using cached version instead...")
+		local _,sErr = pcall(loadsocket)
+		if string.find(sErr,"%%1") and string.find(sErr,"Win32") then --Assume it's a win32 error
+			print(sErr,"\nEither the lua interpreter or library is not 32-bit,\nPlease use both files as 32-bit.")
+		end 
+		print() -- >:( ...
+	else 
+		print("Downloading updates...")
+		for BLpath,BLurl  in pairs(NetworkLists) do 
+			if BLurl and BLurl ~= "nil" then --String of nil because issues?
+				local response,code,headers = sockethttp.request(BLurl)
+				if code ~= 200 then --FAILED???
+					print("Download failed:",code)
+				else 
+					local fh = io.open("data/"..BLpath,"w")
+					fh:write(response) --:) 
+					fh:close() 
+				end 
+			end 
+		end 
+	end 
+else
+	print("Network updater disabled, Using cached versions.")
+	print("to enable it please set NetworkEnabled to true")
+end 
+print("Config Loaded.\n")
 
 --VARIABLES: 
 local BotSteam = nil --stores botid, botname is dangerous to store :| 
@@ -145,45 +182,60 @@ local function UpdateTables() --Okay this is just stupid
 	for line in io.lines("data/BlackListedNames.txt") do 
 		SteamID64toSteam3()
 		table.insert(BlackListedNames,line) 
-	end 
-	 --Download from: https://gist.githubusercontent.com/wgetJane/0bc01bd46d7695362253c5a2fa49f2e9/raw/bot_list.txt 
-	for line in io.lines("data/BlackListSteamID.bot_list.txt") do 
-		if SteamID64toSteam3(line) then 
-			table.insert(BlacklistSteamIDs,SteamID64toSteam3(line))
+	end
+	for filename,_ in pairs(NetworkLists) do
+		print("Loading list: data/"..filename)
+		--for line in io.lines("data/BlackListSteamID.bot_list.txt") do 
+		--	if SteamID64toSteam3(line) then 
+		--		table.insert(BlacklistSteamIDs,SteamID64toSteam3(line))
+		--	end 
+		--end 
+		if io.open("data/"..filename,"r") then --The file exists 
+			local HasDupes = false 
+			local line_num_custom = 0
+			for line in io.lines("data/"..filename) do --"data/BlackListSteamID.custom.txt" | TODO: Ignore if the file doesn't exists? Should exist 
+				line_num_custom = line_num_custom + 1
+				--PLEASE DONT HAVE DUPES >:(
+				if SteamID64toSteam3(line) then 
+					local steamid = SteamID64toSteam3(line) 
+					local IsDupe = false 
+					for k,blsteamid in pairs(BlacklistSteamIDs) do 
+						if steamid == blsteamid then 
+							--TODO: Remove warning of dupes and simply ignore? 
+							--TimedPrint(string.format("WARN: Duplicate SteamID %s found at line %d in %s",line,line_num_custom,"data/"..filename))
+							IsDupe = true 
+							if not HasDupes then 
+								HasDupes = true 
+								TimedPrint(string.format("WARN: Duplicate SteamIDs found in %s","data/"..filename))
+							end 
+							break 
+						end 
+					end 
+					if not IsDupe then 
+						table.insert(BlacklistSteamIDs,SteamID64toSteam3(line))
+					end 
+				elseif line:match("(%[U:1:%d+%])") then 
+					local IsDupe = false 
+					for k,blsteamid in pairs(BlacklistSteamIDs) do 
+						if line == blsteamid then 
+							--TimedPrint(string.format("WARN: Duplicate SteamID %s found at line %d in %s",line,line_num_custom,"data"..filename))
+							IsDupe = true 
+							if not HasDupes then 
+								HasDupes = true 
+								TimedPrint(string.format("WARN: Duplicate SteamIDs found in %s","data/"..filename))
+							end 
+							break 
+						end 
+					end 
+					if not IsDupe then 
+						table.insert(BlacklistSteamIDs,line)
+					end 
+				end 
+			end
+		else 
+			print("WARN: File not found:","data/"..filename) --Failed to find the file.
 		end 
 	end 
-	local line_num_custom = 0
-	for line in io.lines("data/BlackListSteamID.custom.txt") do --TODO: Ignore if the file doesn't exists? Should exist 
-		 line_num_custom = line_num_custom + 1
-		--PLEASE DONT HAVE DUPES >:(
-		if SteamID64toSteam3(line) then 
-			local steamid = SteamID64toSteam3(line) 
-			local IsDupe = false 
-			for k,blsteamid in pairs(BlacklistSteamIDs) do 
-				if steamid == blsteamid then 
-					TimedPrint(string.format("WARN: Duplicate SteamID %s found at line %d in custom blacklist",line,line_num_custom))
-					IsDupe = true 
-					break 
-				end 
-			end 
-			if not IsDupe then 
-				table.insert(BlacklistSteamIDs,SteamID64toSteam3(line))
-			end 
-		elseif line:match("(%[U:1:%d+%])") then 
-			local IsDupe = false 
-			for k,blsteamid in pairs(BlacklistSteamIDs) do 
-				if line == blsteamid then 
-					TimedPrint(string.format("WARN: Duplicate SteamID %s found at line %d",line,line_num_custom))
-					IsDupe = true 
-					break 
-				end 
-			end 
-			if not IsDupe then 
-				table.insert(BlacklistSteamIDs,line)
-			end 
-		end 
-	end 
-	
 	line_num_custom = nil 
 	--Call GC to make sure everything is fine! This should also clean up everything else every 5 minutes for sure :)
 	if debugMode then 
@@ -476,7 +528,7 @@ while true do --Never stop
 		TimedPrint(string.format("Status should be received, Found bots: %d",BotCount)) --DEBUG 
 		if KickCheater and not KickWaitName then 
 			TimedPrint("Attempting to kick "..KickCheater)
-			RunCommand(string.format(((debugMode and "echo ") or "").."callvote kick %s cheating",KickCheater),"_LUA_VOTED") --If debug mode is enabled, don't call actual votekicks
+			RunCommand(string.format(((debugMode and "echo ") or "").."callvote kick \"%s cheating\"",KickCheater),"_LUA_VOTED") --If debug mode is enabled, don't call actual votekicks
 			KickCheater = nil 
 			KickWaitName = nil 
 		else 
@@ -493,7 +545,7 @@ while true do --Never stop
 			else 
 				if KickCheater then 
 					TimedPrint("Attempting to kick "..KickCheater)
-					RunCommand(string.format(((debugMode and "echo ") or "").."callvote kick %s cheating",KickCheater),"_LUA_VOTED")  --This would go into a script thing 
+					RunCommand(string.format(((debugMode and "echo ") or "").."callvote kick \"%s cheating\"",KickCheater),"_LUA_VOTED")  --This would go into a script thing 
 					KickCheater = nil 
 				end 
 			end 

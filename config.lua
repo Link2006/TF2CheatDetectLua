@@ -2,7 +2,7 @@
 local Config = Config or {} 
 
 --Configuration settings goes here.
-Config.ConfigVersion = "1.01" --THIS VERSION MUST MATCH THE SCRIPT VERSION, This will warn you otherwise.
+Config.ConfigVersion = "1.1" --THIS VERSION MUST MATCH THE SCRIPT VERSION, This will warn you otherwise.
 
 Config.debugMode = false  --Debug Mode: Disables Votekicks and prints debug messages
 Config.allChat = false --Prints chat messages 
@@ -32,6 +32,26 @@ Config.fps_max = 180 --Issues with the script running too fast/too slow? Tweak t
 --Unless their steamIDs is in the whitelist. 
 
 Config.EnableBlackList = true --This will kick anyone that has a name that matches a word in BlackListedNames
+
+Config.NetworkEnabled = false --Enable this to enable auto-updates of certain /data/ files. UNTESTED (NOT WORKING ON WINDOWS?)
+
+--Table of network lists to download, sorry this isn't as intuitive as the rest of the configs.
+--To disable them, simply remove the line or comment it out.
+-----!!! NOTICE !!!-----
+--This must *ONLY* Include SteamID blacklists for now, Rules/Names MUST be updated MANUALLY.
+-----!!! NOTICE !!!-----
+
+--FORMAT: 
+--"filename" = "update url" -- Setting things to nil will make them load but not update
+Config.NetworkLists = {} 
+--wgetJane's Big list of bots
+Config.NetworkLists["BlackListSteamID.bot_list.txt"] = "https://gist.githubusercontent.com/wgetJane/0bc01bd46d7695362253c5a2fa49f2e9/raw/"
+--Milenko's Github is currently offline, 
+Config.NetworkLists["BlackListSteamID.milenko.txt"] = "https://raw.githubusercontent.com/incontestableness/milenko/blob/master/catlist.nsv.64" --Is this valid?
+--Add your own lists here, 
+--FORMAT: Config.NetworkLists[File Name] = Url
+-- The url can be set to "nil" to disable attempting auto-updates (will crash if given an invalid URL otherwise)
+Config.NetworkLists["BlackListSteamID.custom.txt"] = "nil" --Change this to a real URL to automaticly update 
 
 -----DO NOT TOUCH AT THIS LINE EITHER------
 return Config 
