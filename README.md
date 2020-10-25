@@ -1,4 +1,4 @@
-# Cheater Detector 1.0 (WIP)
+# Cheater Detector 1.1
 
 ### Contact me:
 Twitter: [@Linkcool2006](https://twitter.com/linkcool2006/)
@@ -29,7 +29,11 @@ Twitter: [@Linkcool2006](https://twitter.com/linkcool2006/)
 ### CheaterDetect Configs
 - Check out the file config.lua for a list of what settings you can change
 
+### Custom Lists
+- I've added a few ways to load multiple files by simply adding the new list to the config. This should also eventually allow for auto-updates.
+
 ### Notes
 - Just credit me if you use parts of this code.
 - Any suggestions or questions can be posted as an issue.
 - Should not be considered a cheat as it does not manipulate the game at all; behaves like HLDJ from back in the day
+- Network support is UNTESTED and MAY NOT WORK.
