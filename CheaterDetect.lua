@@ -295,8 +295,15 @@ if debugMode then
 	TimedPrint("DEBUG MODE ENABLED, Voting is disabled in this mode.")
 end 
 
---This is used later in RunCommand...
+--This is used later in RunCommand and other things...
 local tf2path = consoleparser.getPath() --This returns the path to the tf2 folder.
+
+--CHECK IF TF2BD'S ADDON IS INSTALLED
+if io.open(tf2path.."custom/aaaaaaaaaa_loadfirst_tf2_bot_detector/__tf2bd_chat_msg_wrappers.json","r") then 
+	print("!!WARNING!! !!WARNING!! !!WARNING!!")
+	print("It seems that you have the TF2 Bot Detector addon installed, this will cause issues with this script and unexpected behavior.\n","Please delete custom/aaaaaaaaaa_loadfirst_tf2_bot_detector")
+	print("!!WARNING!! !!WARNING!! !!WARNING!!\n")
+end 
 
 --TODO: getCheater(<something>)  (not needed anymore?)
 --TODO: Probably make it so it writes the current script version inside the 'say bind'? maybe also say if we detected them or not? 
