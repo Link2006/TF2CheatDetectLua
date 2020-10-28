@@ -47,7 +47,7 @@ Config.NetworkLists = {}
 --wgetJane's Big list of bots
 Config.NetworkLists["BlackListSteamID.bot_list.txt"] = "https://gist.githubusercontent.com/wgetJane/0bc01bd46d7695362253c5a2fa49f2e9/raw/"
 --Milenko's Github is currently offline, 
-Config.NetworkLists["BlackListSteamID.milenko.txt"] = "https://raw.githubusercontent.com/incontestableness/milenko/blob/master/catlist.nsv.64" --Is this valid?
+Config.NetworkLists["BlackListSteamID.milenko.txt"] = "https://raw.githubusercontent.com/incontestableness/milenko/master/catlist.nsv" --These are Account numbers only (Steam3 compatible)
 --Add your own lists here, 
 --FORMAT: Config.NetworkLists[File Name] = Url
 -- The url can be set to "nil" to disable attempting auto-updates (will crash if given an invalid URL otherwise)

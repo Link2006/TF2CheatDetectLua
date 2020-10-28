@@ -137,11 +137,18 @@ end
 local function SteamID64toSteam3(steamid)
 	if not tonumber(steamid)  then return false,"Invalid SteamID" end --Invalid SteamID or it's a comment
 	steamid = tonumber(steamid) --Please don't let Lua use strings directly, it uses floats otherwise :( 
+	if (steamid - 0x110000100000000) < 0 then return false,"Not a SteamID64" end --This is not SteamID64, might be SteamID3 w/o brackets? 
 	return ("[U:1:%d]"):format(steamid - 0x110000100000000) --Thanks wget for a faster conversion process
 end 
 local function Steam3toSteamID64(steamid)
-	if not steamid:match("(%[U:1:%d+%])")  then return false,"Invalid SteamID" end --Invalid SteamID or it's a comment
-	return tostring(tonumber(steamid:match("%[U:1:(%d+)%]")) + 0x110000100000000) --I have to convert to number before performing the math here, it seems to return 7.656...e+016 instead if i don't; floats suck
+	if not steamid:match("(%[U:1:%d+%])") and not tonumber(steamid) then 
+		return false, "Invalid SteamID" --Not a valid format. Expected [U:1:123456] *Or* 123456
+	end 
+	if tonumber(steamid) then --assume 123456 format 
+		return tostring(tonumber(steamid) + 0x110000100000000)
+	else --Assume [U:1:123456] format 
+		return tostring(tonumber(steamid:match("%[U:1:(%d+)%]")) + 0x110000100000000) --I have to convert to number before performing the math here, it seems to return 7.656...e+016 instead if i don't; floats suck
+	end 
 	--return ("[U:1:%d]"):format(steamid - 0x110000100000000) --Thanks wget for a faster conversion process
 end 
 
@@ -214,8 +221,11 @@ local function UpdateTables() --Okay this is just stupid
 					if not IsDupe then 
 						table.insert(BlacklistSteamIDs,SteamID64toSteam3(line))
 					end 
-				elseif line:match("(%[U:1:%d+%])") then 
+				elseif line:match("(%[U:1:%d+%])") or Steam3toSteamID64(line) then --if it's a SteamID3 *OR* AccountID...
 					local IsDupe = false 
+					if tonumber(line) then --assume AccountID format, fix it
+						line = string.format("[U:1:%s]",line) --Fixed it.
+					end 
 					for k,blsteamid in pairs(BlacklistSteamIDs) do 
 						if line == blsteamid then 
 							--TimedPrint(string.format("WARN: Duplicate SteamID %s found at line %d in %s",line,line_num_custom,"data"..filename))
